@@ -62,10 +62,10 @@ project has.
 
 ### Inflated significance
 
-Claims about importance in place of facts. Watch for: *pivotal*, *crucial*,
-*vital*, *key role*, *testament*, *stands as*, *underscores*, *highlights*,
-*reflects broader*, *evolving landscape*, *rich*, *vibrant*, *commitment
-to*. A library isn't "a pivotal part of the Zig ecosystem." It parses
+Claims about importance in place of facts. Watch for: _pivotal_, _crucial_,
+_vital_, _key role_, _testament_, _stands as_, _underscores_, _highlights_,
+_reflects broader_, _evolving landscape_, _rich_, _vibrant_, _commitment
+to_. A library isn't "a pivotal part of the Zig ecosystem." It parses
 integers and rejects the ones std accepts by accident.
 
 ### Tacked-on analysis
@@ -124,18 +124,18 @@ Milestone codes, decision numbers, internal acronyms, `#123` with no
 None of these is a crime alone. A cluster is a tell. Most of the list comes
 from Kobak et al. (Science Advances, 2025), who counted words that jumped in
 15 million PubMed abstracts after ChatGPT shipped, and from Wikipedia's
-"Signs of AI writing" page. *Leverage*, *utilize*, *robust*, *seamless*, and
-*delve* are already banned in Matt's agent instructions. *Empower*,
-*elevate*, *journey*, and *cutting-edge* are marketing filler I added. They
+"Signs of AI writing" page. _Leverage_, _utilize_, _robust_, _seamless_, and
+_delve_ are already banned in Matt's agent instructions. _Empower_,
+_elevate_, _journey_, and _cutting-edge_ are marketing filler I added. They
 are my additions, not measured ones.
 
-- Verbs: *delve, underscore, showcase, highlight, foster, enhance, leverage,
-  utilize, unveil, navigate, streamline, empower, unlock, elevate*
-- Adjectives: *pivotal, crucial, robust, seamless, comprehensive, intricate,
-  meticulous, transformative, unparalleled, vibrant, rich, cutting-edge*
-- Nouns: *landscape, tapestry, realm, journey, testament, insights*
-- Connectives: *additionally, furthermore, moreover, notably, particularly,
-  ultimately, in order to*
+- Verbs: _delve, underscore, showcase, highlight, foster, enhance, leverage,
+  utilize, unveil, navigate, streamline, empower, unlock, elevate_
+- Adjectives: _pivotal, crucial, robust, seamless, comprehensive, intricate,
+  meticulous, transformative, unparalleled, vibrant, rich, cutting-edge_
+- Nouns: _landscape, tapestry, realm, journey, testament, insights_
+- Connectives: _additionally, furthermore, moreover, notably, particularly,
+  ultimately, in order to_
 
 Replace by saying the concrete thing. Don't swap to a synonym. A "robust"
 parser that becomes a "reliable" parser has changed nothing.
