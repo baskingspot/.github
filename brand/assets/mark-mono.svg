@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+<!--! 16-unit grid. A 16 square tile, the cold world. A disc of r 5 rests in its lower left corner, touching the floor and the wall, and its top sits 10 units up. One color: the disc is cut out of the tile.-->
+  <path fill="#16191d" fill-rule="evenodd" d="M0 0h16v16H0zm5 6a5 5 0 1 0 0 10A5 5 0 1 0 5 6"/>
+</svg>

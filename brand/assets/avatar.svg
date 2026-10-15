@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 24 24">
+<!--! 16-unit grid. A 16 square tile, the cold world. A disc of r 5 rests in its lower left corner, touching the floor and the wall, and its top sits 10 units up. Avatar: 4 units of paper around it.-->
+  <path fill="#f4f1ec" d="M-4-4h24v24H-4z"/>
+  <path fill="#16191d" d="M0 0h16v16H0z"/>
+  <circle cx="5" cy="11" r="5" fill="#d4412b"/>
+</svg>
