@@ -17,3 +17,7 @@ The rest is where the org keeps what it shares:
 ## Working here
 
 `nix develop` provides every tool, and `direnv allow` loads it on entry. `just` lists the recipes. `just ci` runs what CI runs.
+
+## License
+
+MIT. See `LICENSE`. The files in `brand/assets/` are the exception: the baskingspot name, mark, and logos are all rights reserved. See `brand/assets/LICENSE`.
