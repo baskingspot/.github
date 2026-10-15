@@ -45,7 +45,7 @@ just ci
 
 ## License
 
-MIT. See `LICENSE`. TODO: if any code is adapted from elsewhere, list it in `THIRD_PARTY.md` and link that file here. Otherwise delete this sentence.
+MIT. See `LICENSE`. The logo files in `docs/static/` are baskingspot marks and are not covered by it. See `docs/static/LICENSE`. TODO: if any code is adapted from elsewhere, list it in `THIRD_PARTY.md` and link that file here. Otherwise delete this sentence.
 
 ## How it's made
 

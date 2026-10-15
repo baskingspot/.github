@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 28 28">
+<!--! 16-unit grid. A 16 square tile, the cold world. A disc of r 5 rests in its lower left corner, touching the floor and the wall, and its top sits 10 units up. Round avatar for circular crops, such as Discord and Slack: 6 units of paper around the tile, so the corners stay inside the circle.-->
+  <path fill="#f4f1ec" d="M-6-6h28v28H-6z"/>
+  <path fill="#16191d" d="M0 0h16v16H0z"/>
+  <circle cx="5" cy="11" r="5" fill="#d4412b"/>
+</svg>

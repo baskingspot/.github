@@ -28,6 +28,7 @@ All text ships as paths, so no SVG needs a font.
 `assets/` holds the org's files, written by `just brand-org`:
 
 - `avatar.svg` and `avatar.png` (500 px) for the GitHub org avatar.
+- `avatar-round.svg` and `avatar-round.png` (512 px) for circular crops, such as Discord and Slack. The tile has more paper around it, so the corners stay inside the circle.
 - `logo.svg` and `logo-dark.svg`, the lockup on a transparent ground, for a README header at 48 px high.
 - `favicon.svg`, which turns its tile slate in a dark tab bar.
 - `mark-mono.svg`, for one-color use.
@@ -42,4 +43,8 @@ All text ships as paths, so no SVG needs a font.
 just new-library NAME "One sentence about it." DIR
 ```
 
-This writes `docs/static/logo.svg`, `logo-dark.svg`, `favicon.svg`, `social.svg`, and `social.png` into DIR, and a `README.md` from `templates/library/`. It refuses to overwrite existing files. Fill every `TODO` in the README before you publish. Upload `social.png` as the repo's social preview.
+This writes `docs/static/logo.svg`, `logo-dark.svg`, `favicon.svg`, `social.svg`, `social.png`, and a `LICENSE` that reserves the logos, into DIR, and a `README.md` from `templates/library/`. It refuses to overwrite existing files. Fill every `TODO` in the README before you publish. Upload `social.png` as the repo's social preview.
+
+## License
+
+The marks are all rights reserved, and the code that draws them is MIT. See `assets/LICENSE`.

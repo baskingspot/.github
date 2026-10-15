@@ -117,6 +117,15 @@ def avatar():
     return svg((-4, -4, 24, 24), MARK_GRID + " Avatar: 4 units of paper around it.", plate(-4, -4, 24, 24, PAPER), *mark(INK, HEAT))
 
 
+def avatar_round():
+    return svg(
+        (-6, -6, 28, 28),
+        MARK_GRID + " Round avatar for circular crops, such as Discord and Slack: 6 units of paper around the tile, so the corners stay inside the circle.",
+        plate(-6, -6, 28, 28, PAPER),
+        *mark(INK, HEAT),
+    )
+
+
 def mark_mono():
     return svg((0, 0, 16, 16), MARK_GRID + " One color: the disc is cut out of the tile.", *mark(INK, INK, knockout=True))
 
@@ -161,6 +170,7 @@ def org(let):
     out = ROOT / "brand" / "assets"
     files = {
         "avatar.svg": avatar(),
+        "avatar-round.svg": avatar_round(),
         "mark-mono.svg": mark_mono(),
         "favicon.svg": favicon(),
         "logo.svg": logo(let, ORG, False),
@@ -172,8 +182,9 @@ def org(let):
         write(out / name, body)
     squeeze(out / name for name in files)
     render(out / "avatar.svg", out / "avatar.png", 500)
+    render(out / "avatar-round.svg", out / "avatar-round.png", 512)
     render(out / "social.svg", out / "social.png", 1280)
-    print(f"wrote {len(files) + 2} files to {out.relative_to(ROOT)}")
+    print(f"wrote {len(files) + 3} files to {out.relative_to(ROOT)}")
 
 
 NAME_RE = re.compile(r"^[a-z][a-z0-9-]*$")
@@ -191,18 +202,19 @@ def library(let, name, tagline, dest, force):
         "social.svg": social(let, name),
     }
     readme = dest / "README.md"
-    clash = [p for p in [*(static / f for f in files), static / "social.png", readme] if p.exists()]
+    clash = [p for p in [*(static / f for f in files), static / "social.png", static / "LICENSE", readme] if p.exists()]
     if clash and not force:
         sys.exit("refusing to overwrite (use --force): " + ", ".join(str(p) for p in clash))
     for fname, body in files.items():
         write(static / fname, body)
     squeeze(static / fname for fname in files)
     render(static / "social.svg", static / "social.png", 1280)
+    write(static / "LICENSE", (ROOT / "templates" / "library" / "static-LICENSE").read_text())
 
     text = (ROOT / "templates" / "library" / "README.md").read_text()
     text = text.replace("{{name}}", name).replace("{{ident}}", ident).replace("{{tagline}}", tagline)
     write(readme, text)
-    print(f"wrote {len(files) + 2} files under {dest}. Fill every TODO in README.md.")
+    print(f"wrote {len(files) + 3} files under {dest}. Fill every TODO in README.md.")
 
 
 def main():
