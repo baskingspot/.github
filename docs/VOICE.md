@@ -10,6 +10,10 @@ until it shrinks to its own mechanics.
 
 Slack and chat are out of scope. The `write-like-matt` skill covers Slack.
 
+This guide serves the reader. It is not a way to hide how the work is made.
+baskingspot says plainly that LLMs help write it, in `AI.md`, and no text may
+misstate that.
+
 ## The reader
 
 A Zig programmer, tired, partway through something else. They are
