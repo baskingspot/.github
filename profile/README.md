@@ -1,4 +1,9 @@
-# baskingspot
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/baskingspot/.github/main/brand/assets/logo-dark.svg">
+    <img src="https://raw.githubusercontent.com/baskingspot/.github/main/brand/assets/logo.svg" alt="baskingspot" height="48">
+  </picture>
+</h1>
 
 Zig is cold-blooded. Come bask.
 
