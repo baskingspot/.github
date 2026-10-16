@@ -6,7 +6,7 @@
 
 **Not load-bearing:** a one-off script, an analysis notebook, a comparison or test driver for a competitor library, a fixture generator, generated code, and vendored code. This code may be rough. It needs no linter, and it does not need a line in `AGENTS.md`. If a directory of it would confuse an agent, name the directory in `AGENTS.md` in one line, for example "`bench/drivers/` is throwaway comparison code".
 
-**Always checked, whatever the load:** shell scripts and Dockerfiles. They are cheap to check and easy to get wrong, so they get `shellcheck`, `shfmt`, and `hadolint` every time.
+**Always checked, whatever the load:** shell scripts and Dockerfiles. A direnv `.envrc` is configuration, not a script, so it is exempt. They are cheap to check and easy to get wrong, so they get `shellcheck`, `shfmt`, and `hadolint` every time.
 
 When unsure whether code is load-bearing, lint it. If the tool costs more than the code is worth, skip it and say so in one line.
 
