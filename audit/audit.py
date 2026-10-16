@@ -190,11 +190,10 @@ def check_social(repo: Repo) -> None:
     has no uploaded image, and at repository-images.githubusercontent.com once
     one is uploaded.
     """
-    asset = (
-        "brand/assets/social.png"
-        if repo.name == META_REPO
-        else "docs/static/social.png"
-    )
+    if repo.name == META_REPO:
+        # The profile repo is not a project. It has no card of its own.
+        return
+    asset = "docs/static/social.png"
     try:
         with urllib.request.urlopen(
             f"https://github.com/{ORG}/{repo.name}", timeout=30
