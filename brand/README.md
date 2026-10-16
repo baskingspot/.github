@@ -19,7 +19,7 @@ A project mark is the unchanged tile followed by the project name, in the same l
 
 ### Text on the web
 
-Heat is 4.1:1 on paper and 3.9:1 on ink, under the 4.5:1 that link text needs. Docs sites keep heat for the logo, selection, and other non-text marks, and set link text in a tuned heat: `#b8321d` on paper (5.3:1) and `#e8604a` on ink (5.2:1). Body text is ink on paper, or paper on ink. Code surfaces are the text color mixed 7% into the page.
+Heat is 4.1:1 on paper and 3.9:1 on ink, under the 4.5:1 that text needs, and a page of orange links is loud. So heat is not a text color. Docs sites keep it for the logo, the selection, and the underline of a link. A link takes the text color, and turns `#b8321d` on paper or `#e8604a` on ink (both above 5:1) on hover. Body text is ink on paper, or paper on ink. Muted text, such as a contents sidebar, is slate on paper and `#a3abb5` on ink. Code surfaces are the text color mixed 7% into the page.
 
 ## Lettering
 
