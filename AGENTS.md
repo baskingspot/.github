@@ -25,6 +25,7 @@ just ci
 - `docs/VOICE.md` is the voice guide. Read all of it before you write anything public.
 - `docs/AI.md` is the disclosure page. Every statement on it must be true.
 - `brand/` holds the brand: the system in `README.md`, the org's files in `assets/`, and the generator in `tools/`. Never edit an SVG in `assets/` by hand. Change the tool and run `just brand-org`.
+- `audit/audit.py` checks the whole org for conformance. `just audit` runs it, and the `baskingspot-audit` skill says how to read the report. Its rules mirror the house shape, so change the rule and the script together.
 - `templates/library/README.md` is the README every library starts from. `just new-library` fills it in.
 - `.github/workflows/` calls the shared `ci` and `zizmor` workflows in `baskingspot/gh-actions`, pinned by commit SHA. The maintenance job in that repo keeps `flake.lock` and the pins current, so this repo has no update workflow of its own.
 

@@ -17,9 +17,9 @@ lint:
     nix fmt -- --ci
     oxfmt --check README.md AGENTS.md brand/README.md docs profile templates brand/tools .github
     oxlint brand/tools
-    ruff check brand/tools
-    ruff format --check brand/tools
-    ty check brand/tools
+    ruff check brand/tools audit
+    ruff format --check brand/tools audit
+    ty check brand/tools audit
     actionlint
     zizmor .
     just --fmt --check
@@ -29,12 +29,18 @@ lint:
 fmt:
     nix fmt
     oxfmt README.md AGENTS.md brand/README.md docs profile templates brand/tools .github
-    ruff format brand/tools
+    ruff format brand/tools audit
     just --fmt
 
 [doc("Everything CI runs")]
 [group("ci")]
 ci: lint
+
+[doc("Audit every public repo in the org for conformance: metadata, files, justfile and workflow style, README hygiene, the brand marks, site registration, and files that repeat. Pass a repo name to audit one. Needs gh. Exit 1 on any error")]
+[group("audit")]
+[no-cd]
+audit REPO="":
+    {{ brand }} python3 {{ justfile_directory() }}/audit/audit.py {{ if REPO == "" { "" } else { "--repo " + REPO } }}
 
 [doc("Render each SVG under DIR to a PNG next to it, with the pinned fonts")]
 [group("brand")]
