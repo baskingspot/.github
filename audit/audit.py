@@ -344,6 +344,16 @@ def check_workflows(repo: Repo, release: tuple[str, str]) -> None:
                     "workflows",
                     f"{rel}: runs-on ubuntu-latest, want ubuntu-26.04",
                 )
+    ci_text = repo.read(".github/workflows/ci.yml") or ""
+    # gh-actions defines those inputs, so it is the one repo that names them.
+    if repo.name != "gh-actions" and re.search(
+        r"^\s+(recipes|runners|non-blocking):", ci_text, flags=re.MULTILINE
+    ):
+        repo.add(
+            "warn",
+            "workflows",
+            "ci.yml passes recipes, runners, or non-blocking. List the jobs in .github/ci.yaml",
+        )
     for stale in ("deploy-docs.yml", "update-flake-lock.yml", "update-actions.yml"):
         if (folder / stale).is_file() and repo.name not in {"gh-actions"}:
             repo.add(
