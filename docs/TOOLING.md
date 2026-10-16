@@ -19,8 +19,8 @@ The rule exists for robots as much as for people. A formatter ends the argument 
 | Zig                             | `zig fmt`                          | `ziglint`                           | the flake, `zig` module                                      |
 | Nix                             | `nixfmt`, through `nix fmt`        | `statix`, `deadnix`                 | the flake, `base` module                                     |
 | Python                          | `ruff format`                      | `ruff check`, and `ty` for types    | `uvx` when a `pyproject.toml` exists, else the flake         |
-| Shell                           | `shfmt`                            | `shellcheck`, always                | the flake                                                    |
-| OpenTofu, Terraform (HCL)       | `tofu fmt`                         | `tflint`, and `tofu validate`       | the flake                                                    |
+| Shell                           | `shfmt`                            | `shellcheck`, always                | the flake, `shell` module                                    |
+| OpenTofu, Terraform (HCL)       | `tofu fmt`                         | `tflint`, and `tofu validate`       | the flake, `terraform` module                                |
 | GitHub Actions workflows        | `oxfmt`                            | `actionlint`, `zizmor`              | the flake, `base` module                                     |
 | Markdown, YAML, JSON, TOML, CSS | `oxfmt`                            | none. The voice guide governs prose | the flake                                                    |
 | JavaScript, TypeScript          | `oxfmt`                            | `oxlint`                            | `bunx` or `npx` when a `package.json` exists, else the flake |
@@ -33,7 +33,7 @@ The rule exists for robots as much as for people. A formatter ends the argument 
 
 Where a language ecosystem has a manifest, its own toolchain runs the tool and pins the version: `uvx` with a `pyproject.toml`, `bunx` or `npx` with a `package.json`. The flake carries the tool when there is no manifest. `nix fmt` handles Nix files only. Every other language runs from the repo's justfile.
 
-Shell, `tflint`, and a few other tools are not in the `baskingspot/nix` `base` module yet. A repo that needs one adds it to its own `packages` until a module carries it.
+Each language has its own module in `baskingspot/nix`: `zig`, `terraform`, and `shell` so far. A repo imports the modules for the languages it has, and composes their shells with `inputsFrom`. Where no module exists yet, a repo adds the tool to its own `packages`, and a module is the next piece to write.
 
 ## How to apply it
 
