@@ -5,19 +5,12 @@ on:
     branches: [main]
   pull_request:
 
+permissions: {}
+
 jobs:
-  lint:
-    runs-on: ubuntu-latest
+  ci:
     permissions:
       contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: DeterminateSystems/determinate-nix-action@d0c908e6cbe9f89f36ed8205a3ab6f092636916a # v3.23.1
-      - uses: DeterminateSystems/magic-nix-cache-action@84c0677f58dcedf3b91f8223ce36a9ea5b3c84b7 # v15
-        with:
-          use-flakehub: false
-      - name: Run checks
-        run: nix develop --command just ci
+    uses: baskingspot/gh-actions/.github/workflows/ci.yml@060f97f4e6327a3d5078d5b32fd512084b896974 # v0.1.0
+    secrets:
+      CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
