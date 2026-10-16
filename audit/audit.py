@@ -236,6 +236,16 @@ def check_files(repo: Repo) -> None:
     license_text = repo.read("LICENSE") or ""
     if license_text and "MIT License" not in license_text:
         repo.add("error", "license", "LICENSE is not MIT")
+    elif license_text and "and contributors" not in license_text:
+        people = gh_json(f"repos/{ORG}/{repo.name}/contributors?per_page=100")
+        humans = [p["login"] for p in people if p.get("type") == "User"]
+        if len(humans) > 1:
+            repo.add(
+                "warn",
+                "license",
+                f"{len(humans)} people have contributed ({', '.join(humans)}), "
+                'so the copyright line should end with "and contributors"',
+            )
     brand_license = repo.read("docs/static/LICENSE")
     if brand_license is not None and "All rights reserved" not in brand_license:
         repo.add("error", "license", "docs/static/LICENSE does not reserve the logos")
