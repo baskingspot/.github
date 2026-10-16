@@ -7,7 +7,7 @@ every repo has, justfile and workflow style, README hygiene, the brand marks,
 and the registration of docs sites. It also lists files and recipes that
 repeat across repos, as candidates to move into a shared repo.
 
-It reads public repos over HTTPS with `gh` and `git`, and changes nothing.
+It reads the org's public repos over HTTPS (a private repo, such as `internal`, is out of scope) with `gh` and `git`, and changes nothing.
 Exit status 1 means at least one error finding.
 """
 
@@ -600,7 +600,11 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="baskingspot-audit-") as tmp:
         scratch = Path(tmp)
         listing = gh_json(f"orgs/{ORG}/repos?type=all&per_page=100")
-        metas = {m["name"]: m for m in listing if not m["archived"] and not m["fork"]}
+        metas = {
+            m["name"]: m
+            for m in listing
+            if not m["archived"] and not m["fork"] and not m["private"]
+        }
         repos: dict[str, Repo] = {}
         for name in sorted(metas):
             if args.repo and name != args.repo:
