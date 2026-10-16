@@ -15,6 +15,10 @@ TODO: one bullet per chapter of the guide, in that chapter's own words. Each bul
 
 - [Chapter title](https://baskingspot.dev/{{name}}/#chapter-title): what it does in one sentence, with the symbol that matters.
 
+TODO: a library with one namespace per format reads better as a table (namespace, what it covers, what it supports) than as bullets. Use it, and drop the bullets. Delete this line.
+
+TODO: list what a reader would assume exists and doesn't, under "Not implemented:", one bullet each, with the symbol or error that says so (`error.Unimplemented`). Delete this line if nothing is missing.
+
 ## Install
 
 ```sh
@@ -27,6 +31,8 @@ Add the module to your build:
 const {{ident}} = b.dependency("{{name}}", .{ .target = target, .optimize = optimize });
 exe.root_module.addImport("{{name}}", {{ident}}.module("{{name}}"));
 ```
+
+TODO: if the module name collides with a std namespace in typical adopter code (`std.compress`, `std.tls`), say so here and name the alias to bind it as (`compressx`). Otherwise delete this line.
 
 {{name}} builds with Zig 0.16 only.
 
