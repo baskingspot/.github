@@ -15,7 +15,6 @@ round: a constant-stroke lettering with round ends, drawn from the Thin
 Both return path data in units where the x-height is XH_OUT (100).
 """
 
-import math
 import os
 
 import pathops
@@ -26,7 +25,9 @@ from fontTools.pens.transformPen import TransformPen
 from fontTools.ttLib import TTFont
 from fontTools.varLib.instancer import instantiateVariableFont
 
-_PATH = os.path.join(os.environ["BRAND_FONT_DIR"], "variable", "HankenGrotesk[wght].ttf")
+_PATH = os.path.join(
+    os.environ["BRAND_FONT_DIR"], "variable", "HankenGrotesk[wght].ttf"
+)
 _FONTS = {}
 
 XH = 493.0  # font units
@@ -234,7 +235,13 @@ def round_zone(S):
 
 class Lettering:
     def __init__(self, name, glyph, zone, track, kern, prec, max_err):
-        self.name, self._glyph, self.track, self.kern, self.prec = name, glyph, track, kern, prec
+        self.name, self._glyph, self.track, self.kern, self.prec = (
+            name,
+            glyph,
+            track,
+            kern,
+            prec,
+        )
         self.max_err = max_err  # cubic refit tolerance, font units
         self.zone = zone  # (bottom, top) of the x-height zone, font units
         self._cache = {}
@@ -267,27 +274,114 @@ class Lettering:
 
 
 HANKEN_KERN = {
-    "ba": 4, "sk": 4, "ki": 6, "ng": -2, "sp": 4, "po": -2, "ot": -8,
-    "st": -2, "dx": -6, "ls": 2, "co": -4, "pr": -2, "re": -6, "es": -2,
-    "be": -2, "nc": -2, "ma": -2, "rk": -8, "te": -8, "ti": 4, "im": 4,
-    "ty": -10, "yp": -4, "js": 0, "so": -2, "on": 0, "ht": 0, "tp": 0,
-    "lo": -2, "og": -2, "cl": 0, "li": 4, "rr": -4, "ro": -6, "ap": 0,
-    "ce": -4, "ec": -4, "fm": -6, "ex": -6, "xp": -6, "gu": 0, "uu": 0,
-    "ui": 4, "id": 4, "ar": -2, "rg": -4, "gs": 0, "ha": 0, "as": 0,
-    "sh": 2, "zo": -4, "ze": -4, "mt": -4, "tl": 0, "ve": -8, "ev": -8,
-    "fs": -4, "ft": -10, "tf": -10, "ry": -10, "yr": -10, "ny": -6,
+    "ba": 4,
+    "sk": 4,
+    "ki": 6,
+    "ng": -2,
+    "sp": 4,
+    "po": -2,
+    "ot": -8,
+    "st": -2,
+    "dx": -6,
+    "ls": 2,
+    "co": -4,
+    "pr": -2,
+    "re": -6,
+    "es": -2,
+    "be": -2,
+    "nc": -2,
+    "ma": -2,
+    "rk": -8,
+    "te": -8,
+    "ti": 4,
+    "im": 4,
+    "ty": -10,
+    "yp": -4,
+    "js": 0,
+    "so": -2,
+    "on": 0,
+    "ht": 0,
+    "tp": 0,
+    "lo": -2,
+    "og": -2,
+    "cl": 0,
+    "li": 4,
+    "rr": -4,
+    "ro": -6,
+    "ap": 0,
+    "ce": -4,
+    "ec": -4,
+    "fm": -6,
+    "ex": -6,
+    "xp": -6,
+    "gu": 0,
+    "uu": 0,
+    "ui": 4,
+    "id": 4,
+    "ar": -2,
+    "rg": -4,
+    "gs": 0,
+    "ha": 0,
+    "as": 0,
+    "sh": 2,
+    "zo": -4,
+    "ze": -4,
+    "mt": -4,
+    "tl": 0,
+    "ve": -8,
+    "ev": -8,
+    "fs": -4,
+    "ft": -10,
+    "tf": -10,
+    "ry": -10,
+    "yr": -10,
+    "ny": -6,
     "ys": -6,
 }
 
 ROUND_KERN = {
-    "ba": 2, "sk": 4, "ki": 4, "ot": -10, "dx": -6, "co": -4, "re": -8,
-    "rk": -10, "te": -10, "ty": -14, "ro": -8, "ce": -4, "ec": -4,
-    "fm": -8, "ex": -8, "xp": -8, "ve": -10, "ev": -10, "ft": -14,
-    "tf": -14, "ry": -14, "yr": -14, "ny": -8, "ys": -8, "zo": -4,
-    "st": -4, "ts": -4, "po": -2, "rr": -6, "mt": -4, "fs": -6,
+    "ba": 2,
+    "sk": 4,
+    "ki": 4,
+    "ot": -10,
+    "dx": -6,
+    "co": -4,
+    "re": -8,
+    "rk": -10,
+    "te": -10,
+    "ty": -14,
+    "ro": -8,
+    "ce": -4,
+    "ec": -4,
+    "fm": -8,
+    "ex": -8,
+    "xp": -8,
+    "ve": -10,
+    "ev": -10,
+    "ft": -14,
+    "tf": -14,
+    "ry": -14,
+    "yr": -14,
+    "ny": -8,
+    "ys": -8,
+    "zo": -4,
+    "st": -4,
+    "ts": -4,
+    "po": -2,
+    "rr": -6,
+    "mt": -4,
+    "fs": -6,
 }
 
 ROUND_S = 100.0  # stroke, font units: 17.4% of the ink x-height
 
 HANKEN = Lettering("hanken", hanken_glyph, (0.0, XH), -14, HANKEN_KERN, 0, 0.6)
-ROUND = Lettering("round", lambda ch: round_glyph(ch, ROUND_S), round_zone(ROUND_S), -6, ROUND_KERN, 1, 2.0)
+ROUND = Lettering(
+    "round",
+    lambda ch: round_glyph(ch, ROUND_S),
+    round_zone(ROUND_S),
+    -6,
+    ROUND_KERN,
+    1,
+    2.0,
+)

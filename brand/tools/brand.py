@@ -13,7 +13,6 @@ out as paths, so no SVG depends on a font.
 
 import argparse
 import math
-import os
 import re
 import subprocess
 import sys
@@ -23,7 +22,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 
-import lettering  # noqa: E402
+import lettering
 
 INK = "#16191d"
 PAPER = "#f4f1ec"
@@ -110,24 +109,41 @@ def favicon():
     tile, disc = mark(INK, HEAT)
     tile = tile.replace(f'fill="{INK}"', 'class="c"')
     style = f"<style>.c{{fill:{INK}}}@media (prefers-color-scheme:dark){{.c{{fill:{SLATE}}}}}</style>"
-    return svg((0, 0, 16, 16), MARK_GRID + " At 16 px the tile edges sit on pixels. Dark tab bars get a slate tile.", style, tile, disc)
+    return svg(
+        (0, 0, 16, 16),
+        MARK_GRID
+        + " At 16 px the tile edges sit on pixels. Dark tab bars get a slate tile.",
+        style,
+        tile,
+        disc,
+    )
 
 
 def avatar():
-    return svg((-4, -4, 24, 24), MARK_GRID + " Avatar: 4 units of paper around it.", plate(-4, -4, 24, 24, PAPER), *mark(INK, HEAT))
+    return svg(
+        (-4, -4, 24, 24),
+        MARK_GRID + " Avatar: 4 units of paper around it.",
+        plate(-4, -4, 24, 24, PAPER),
+        *mark(INK, HEAT),
+    )
 
 
 def avatar_round():
     return svg(
         (-6, -6, 28, 28),
-        MARK_GRID + " Round avatar for circular crops, such as Discord and Slack: 6 units of paper around the tile, so the corners stay inside the circle.",
+        MARK_GRID
+        + " Round avatar for circular crops, such as Discord and Slack: 6 units of paper around the tile, so the corners stay inside the circle.",
         plate(-6, -6, 28, 28, PAPER),
         *mark(INK, HEAT),
     )
 
 
 def mark_mono():
-    return svg((0, 0, 16, 16), MARK_GRID + " One color: the disc is cut out of the tile.", *mark(INK, INK, knockout=True))
+    return svg(
+        (0, 0, 16, 16),
+        MARK_GRID + " One color: the disc is cut out of the tile.",
+        *mark(INK, INK, knockout=True),
+    )
 
 
 def badge(let):
@@ -148,8 +164,17 @@ def social(let, name):
     els, right = lockup(let, name, INK, HEAT, INK)
     k = min(880 / right, 1.5)
     x, y = 640 - right * k / 2, 320 - DESCENT * k / 2
-    group = f'<g transform="translate({n(x)} {n(y)}) scale({n(k)})">' + "".join(els) + "</g>"
-    return svg((0, 0, 1280, 640), "GitHub social preview, 1280 by 640. " + lockup_comment(let), plate(0, 0, 1280, 640, PAPER), group)
+    group = (
+        f'<g transform="translate({n(x)} {n(y)}) scale({n(k)})">'
+        + "".join(els)
+        + "</g>"
+    )
+    return svg(
+        (0, 0, 1280, 640),
+        "GitHub social preview, 1280 by 640. " + lockup_comment(let),
+        plate(0, 0, 1280, 640, PAPER),
+        group,
+    )
 
 
 def write(path, body):
@@ -159,7 +184,9 @@ def write(path, body):
 
 def squeeze(paths):
     cfg = HERE / "svgo.config.mjs"
-    subprocess.run(["svgo", "--config", str(cfg), "--quiet", *map(str, paths)], check=True)
+    subprocess.run(
+        ["svgo", "--config", str(cfg), "--quiet", *map(str, paths)], check=True
+    )
 
 
 def render(src, dst, width):
@@ -192,7 +219,9 @@ NAME_RE = re.compile(r"^[a-z][a-z0-9-]*$")
 
 def library(let, name, tagline, dest, force):
     if not NAME_RE.match(name):
-        sys.exit(f"name must be lowercase letters, digits, and hyphens, and start with a letter: {name!r}")
+        sys.exit(
+            f"name must be lowercase letters, digits, and hyphens, and start with a letter: {name!r}"
+        )
     ident = name.replace("-", "_")
     static = dest / "docs" / "static"
     files = {
@@ -202,27 +231,49 @@ def library(let, name, tagline, dest, force):
         "social.svg": social(let, name),
     }
     readme = dest / "README.md"
-    clash = [p for p in [*(static / f for f in files), static / "social.png", static / "LICENSE", readme] if p.exists()]
+    clash = [
+        p
+        for p in [
+            *(static / f for f in files),
+            static / "social.png",
+            static / "LICENSE",
+            readme,
+        ]
+        if p.exists()
+    ]
     if clash and not force:
-        sys.exit("refusing to overwrite (use --force): " + ", ".join(str(p) for p in clash))
+        sys.exit(
+            "refusing to overwrite (use --force): " + ", ".join(str(p) for p in clash)
+        )
     for fname, body in files.items():
         write(static / fname, body)
     squeeze(static / fname for fname in files)
     render(static / "social.svg", static / "social.png", 1280)
-    write(static / "LICENSE", (ROOT / "templates" / "library" / "static-LICENSE").read_text())
+    write(
+        static / "LICENSE",
+        (ROOT / "templates" / "library" / "static-LICENSE").read_text(),
+    )
 
     text = (ROOT / "templates" / "library" / "README.md").read_text()
-    text = text.replace("{{name}}", name).replace("{{ident}}", ident).replace("{{tagline}}", tagline)
+    text = (
+        text.replace("{{name}}", name)
+        .replace("{{ident}}", ident)
+        .replace("{{tagline}}", tagline)
+    )
     write(readme, text)
     print(f"wrote {len(files) + 3} files under {dest}. Fill every TODO in README.md.")
 
 
 def main():
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--lettering", choices=LETTERINGS, default="hanken")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("org", help="write the org assets to brand/assets")
-    lib = sub.add_parser("library", help="write the logo files and a README for a new library")
+    lib = sub.add_parser(
+        "library", help="write the logo files and a README for a new library"
+    )
     lib.add_argument("name")
     lib.add_argument("tagline")
     lib.add_argument("dest", nargs="?", default=".", type=Path)

@@ -54,6 +54,9 @@
                 svgo
                 just
                 oxfmt
+                oxlint
+                ruff
+                ty
                 fd
                 chafa
                 actionlint

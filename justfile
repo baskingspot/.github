@@ -15,7 +15,11 @@ default:
 [group("lint")]
 lint:
     nix fmt -- --ci
-    oxfmt --check README.md AGENTS.md brand/README.md docs profile templates
+    oxfmt --check README.md AGENTS.md brand/README.md docs profile templates brand/tools
+    oxlint brand/tools
+    ruff check brand/tools
+    ruff format --check brand/tools
+    ty check brand/tools
     actionlint
     zizmor .
     just --fmt --check
@@ -24,7 +28,8 @@ lint:
 [group("lint")]
 fmt:
     nix fmt
-    oxfmt README.md AGENTS.md brand/README.md docs profile templates
+    oxfmt README.md AGENTS.md brand/README.md docs profile templates brand/tools
+    ruff format brand/tools
     just --fmt
 
 [doc("Everything CI runs")]
