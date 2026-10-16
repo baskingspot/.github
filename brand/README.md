@@ -17,6 +17,10 @@ A project mark is the unchanged tile followed by the project name, in the same l
 - heat `#d4412b`, the red of an infrared reptile lamp. It is 29 degrees of hue redder than Zig's `#f7a41d` and much darker.
 - slate `#58616c`, the tile on dark backgrounds.
 
+### Text on the web
+
+Heat is 4.1:1 on paper and 3.9:1 on ink, under the 4.5:1 that link text needs. Docs sites keep heat for the logo, selection, and other non-text marks, and set link text in a tuned heat: `#b8321d` on paper (5.3:1) and `#e8604a` on ink (5.2:1). Body text is ink on paper, or paper on ink. Code surfaces are the text color mixed 7% into the page.
+
 ## Lettering
 
 The lettering is Hanken Grotesk 600, re-cut. The ascenders of b, d, f, h, k, and l reach 1.6 x-heights. The t has a flat top, and the dots of i and j are squares. The spacing is set by hand. A rounded monoline variant exists: run the tool with `--lettering round`.
