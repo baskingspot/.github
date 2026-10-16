@@ -15,7 +15,7 @@ default:
 [group("lint")]
 lint:
     nix fmt -- --ci
-    oxfmt --check README.md AGENTS.md brand/README.md docs profile templates brand/tools
+    oxfmt --check README.md AGENTS.md brand/README.md docs profile templates brand/tools .github
     oxlint brand/tools
     ruff check brand/tools
     ruff format --check brand/tools
@@ -28,7 +28,7 @@ lint:
 [group("lint")]
 fmt:
     nix fmt
-    oxfmt README.md AGENTS.md brand/README.md docs profile templates brand/tools
+    oxfmt README.md AGENTS.md brand/README.md docs profile templates brand/tools .github
     ruff format brand/tools
     just --fmt
 
