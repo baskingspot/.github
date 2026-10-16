@@ -20,6 +20,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -179,11 +180,40 @@ def check_metadata(repo: Repo, roster: dict[str, dict[str, str]]) -> None:
     perms = gh_json(f"repos/{ORG}/{repo.name}/actions/permissions/workflow")
     if perms.get("default_workflow_permissions") != "read":
         repo.add("error", "settings", "default workflow permissions are not read-only")
-    if repo.name != META_REPO:
+    check_social(repo)
+
+
+def check_social(repo: Repo) -> None:
+    """GitHub has no API for the social preview, but the repo page names it.
+
+    The page's og:image points at opengraph.githubassets.com while the repo
+    has no uploaded image, and at repository-images.githubusercontent.com once
+    one is uploaded.
+    """
+    asset = (
+        "brand/assets/social.png"
+        if repo.name == META_REPO
+        else "docs/static/social.png"
+    )
+    try:
+        with urllib.request.urlopen(
+            f"https://github.com/{ORG}/{repo.name}", timeout=30
+        ) as page:
+            html = page.read().decode("utf-8", errors="replace")
+    except OSError as error:
         repo.add(
             "info",
             "social",
-            "manual: the social preview cannot be read. Upload docs/static/social.png",
+            f"could not read the repo page to check the social preview: {error}",
+        )
+        return
+    match = re.search(r'<meta property="og:image" content="([^"]*)"', html)
+    image = match.group(1) if match else ""
+    if "repository-images.githubusercontent.com" not in image:
+        repo.add(
+            "warn",
+            "social",
+            f"no custom social preview. Upload {asset} in the repo's settings",
         )
 
 
