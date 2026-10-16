@@ -27,13 +27,13 @@ The rule exists for robots as much as for people. A formatter ends the argument 
 | Go                              | `gofumpt`, through `golangci-lint` | `golangci-lint`                     | `go.mod` tooling, else the flake                             |
 | Rust                            | `rustfmt`                          | `clippy`                            | the repo's toolchain file, else the flake                    |
 | C, C++                          | `clang-format`                     | `clang-tidy`                        | the flake                                                    |
-| Dockerfile                      | none                               | `hadolint`, always                  | the flake                                                    |
+| Dockerfile                      | none                               | `hadolint`, always                  | the flake, `docker` module                                   |
 | justfile                        | `just --fmt`                       | `just --fmt --check`                | the flake                                                    |
 | SVG                             | `svgo`                             | none                                | the flake                                                    |
 
 Where a language ecosystem has a manifest, its own toolchain runs the tool and pins the version: `uvx` with a `pyproject.toml`, `bunx` or `npx` with a `package.json`. The flake carries the tool when there is no manifest. `nix fmt` handles Nix files only. Every other language runs from the repo's justfile.
 
-Each language has its own module in `baskingspot/nix`: `zig`, `terraform`, and `shell` so far. A repo imports the modules for the languages it has, and composes their shells with `inputsFrom`. Where no module exists yet, a repo adds the tool to its own `packages`, and a module is the next piece to write.
+Each language has its own module in `baskingspot/nix`: `zig`, `terraform`, `shell`, and `docker` so far. A repo imports the modules for the languages it has, and composes their shells with `inputsFrom`. Where no module exists yet, a repo adds the tool to its own `packages`, and a module is the next piece to write.
 
 ## How to apply it
 
