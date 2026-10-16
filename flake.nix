@@ -1,35 +1,21 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    flake-parts.url = "github:hercules-ci/flake-parts";
-    mattware = {
-      url = "github:mattrobenolt/nixpkgs";
+    flake-parts.follows = "baskingspot/flake-parts";
+    baskingspot = {
+      url = "github:baskingspot/nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
   outputs =
-    inputs@{
-      flake-parts,
-      nixpkgs,
-      mattware,
-      ...
-    }:
+    inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
-      systems = [
-        "x86_64-linux"
-        "aarch64-linux"
-        "aarch64-darwin"
-      ];
+      imports = [ inputs.baskingspot.flakeModules.base ];
 
       perSystem =
-        { system, ... }:
+        { pkgs, config, ... }:
         let
-          pkgs = import nixpkgs {
-            inherit system;
-            overlays = [ mattware.overlays.default ];
-          };
-
           # Fonts for the brand SVGs. Text is laid out from these so every
           # machine renders the same glyphs. The final assets outline the text.
           fonts = pkgs.symlinkJoin {
@@ -44,25 +30,19 @@
           };
         in
         {
-          formatter = pkgs.nixfmt-tree;
-
           devShells.default = pkgs.mkShell {
+            inputsFrom = [ config.devShells.base ];
+
             packages =
               with pkgs;
               [
-                resvg
-                svgo
-                just
+                chafa
                 oxfmt
                 oxlint
+                resvg
                 ruff
+                svgo
                 ty
-                fd
-                chafa
-                actionlint
-                zizmor
-                pinact
-                gh
               ]
               ++ [
                 (python3.withPackages (ps: [
