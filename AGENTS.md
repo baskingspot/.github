@@ -33,7 +33,7 @@ just ci
 - Recipes carry a `[doc("...")]` directive and a `[group("...")]`. Do not document a recipe with a `#` comment. A recipe parameter is uppercase. `[private] default` lists the recipes.
 - Commit messages are one line, `area: summary`, like `docs: LLM disclosure page`. Add a short body only when the why needs it.
 - Every commit is signed. Do not rewrite pushed history.
-- Pin every Action by SHA with a version comment, and pin the runner label in any workflow that sets one. `just pin` pins a new one and `just update` moves them to the newest release that is at least three days old. Both need `GITHUB_TOKEN`. A pin to a release younger than three days makes `just update` exit 2 until it ages. zizmor must pass.
+- Pin every Action by SHA with a version comment, and pin the runner label in any workflow that sets one. `just pin` pins a new one and `just update` moves them to the newest release. Other owners' releases must be at least three days old, and our own `baskingspot/` actions are exempt. Both need `GITHUB_TOKEN`. A hand pin to another owner's release younger than three days makes `just update` exit 2 until it ages. zizmor must pass.
 - Format Nix with `nix fmt`, never `nixfmt` directly.
 - Public text follows the voice guide. Name no project until the repo has moved into the org.
 - A claim about how the work is made belongs on `docs/AI.md`, and nowhere else.

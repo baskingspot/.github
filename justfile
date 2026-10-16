@@ -41,17 +41,19 @@ brand-render DIR="brand":
 brand-view FILE:
     {{ brand }} sh -c 'resvg --skip-system-fonts --use-fonts-dir "$BRAND_FONT_DIR" "$1" -c | chafa -' _ {{ FILE }}
 
-# Three days of trailing age: a release has to survive that long before we
-# pin to it, so a hijacked tag has time to be caught.
 [doc("Pin every Action to a commit SHA, leaving versions as they are. Needs GITHUB_TOKEN")]
 [group("actions")]
 pin:
     pinact run
 
-[doc("Pin every Action to the newest release at least three days old. Needs GITHUB_TOKEN")]
+# Three days of trailing age for other people's actions, so a hijacked tag has
+# time to be caught. Our own org's actions skip the age rule, so a release in
+# baskingspot/gh-actions reaches every repo at once.
+[doc("Pin every Action to its newest release. Outside baskingspot, at least three days old. Needs GITHUB_TOKEN")]
 [group("actions")]
 update:
-    pinact run --update --min-age 3
+    pinact run --update --min-age 3 --exclude '^baskingspot/'
+    pinact run --update --include '^baskingspot/'
 
 [doc("Write the org assets to brand/assets: avatar, logos, favicon, badge, and social card")]
 [group("brand")]
