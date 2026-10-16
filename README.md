@@ -13,6 +13,7 @@ The rest is where the org keeps what it shares:
 - `docs/AI.md` says how LLMs are used and how that work is checked.
 - `brand/` holds the logo system, the org's brand files, and the generator that makes a new library's logos.
 - `templates/library/` is the README every library starts from.
+- `templates/agents/` holds agent definitions a repo copies into its `.pi/agents/`, starting with `docs-librarian.md`. Fill every `{{...}}` placeholder.
 
 ## Working here
 
