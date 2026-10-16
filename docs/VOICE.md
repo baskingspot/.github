@@ -173,6 +173,13 @@ the thing. Lead with what it is and why it exists.
 from the brand brief. The tagline lives here. It's one line, and it doesn't
 repeat.
 
+The org has two lines, always in this order. The tagline is "Zig is
+cold-blooded. Come bask." The descriptor is "Libraries between std and your
+application." The tagline goes first so that no surface opens with "Zig"
+twice. They appear in the org bio, the front page and its description and
+social meta tags, and the profile README's opening. Change them in all four
+at once.
+
 **Open question for Matt:** does the no-contractions rule from stdx's guide
 become org policy, or does it stay limited to procedure and reference? The
 evidence points two ways. In September, stiff no-contraction prose in a PR
