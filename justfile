@@ -42,6 +42,12 @@ ci: lint
 audit REPO="":
     {{ brand }} python3 {{ justfile_directory() }}/audit/audit.py {{ if REPO == "" { "" } else { "--repo " + REPO } }}
 
+[doc("Report where CI time goes: each repo's jobs, their slowest steps, and the critical path of its latest successful run on main. Pass a repo name for one. Needs gh")]
+[group("audit")]
+[no-cd]
+ci-report REPO="":
+    {{ brand }} python3 {{ justfile_directory() }}/audit/ci_report.py {{ REPO }}
+
 [doc("Render each SVG under DIR to a PNG next to it, with the pinned fonts")]
 [group("brand")]
 brand-render DIR="brand":
