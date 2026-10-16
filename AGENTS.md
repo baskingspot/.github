@@ -26,13 +26,14 @@ just ci
 - `docs/AI.md` is the disclosure page. Every statement on it must be true.
 - `brand/` holds the brand: the system in `README.md`, the org's files in `assets/`, and the generator in `tools/`. Never edit an SVG in `assets/` by hand. Change the tool and run `just brand-org`.
 - `templates/library/README.md` is the README every library starts from. `just new-library` fills it in.
-- `.github/workflows/` runs lint, zizmor, and a weekly flake lock update.
+- `.github/workflows/` calls the shared `ci` and `zizmor` workflows in `baskingspot/gh-actions`, pinned by commit SHA. The maintenance job in that repo keeps `flake.lock` and the pins current, so this repo has no update workflow of its own.
 
 ## Conventions
 
 - Recipes carry a `[doc("...")]` directive and a `[group("...")]`. Do not document a recipe with a `#` comment. A recipe parameter is uppercase. `[private] default` lists the recipes.
 - Commit messages are one line, `area: summary`, like `docs: LLM disclosure page`. Add a short body only when the why needs it.
 - Every commit is signed. Do not rewrite pushed history.
-- Pin every Action by SHA with a version comment. zizmor must pass.
+- Pin every Action by SHA with a version comment, and pin the runner label in any workflow that sets one. `just pin` pins a new one and `just update` moves them to the newest release that is at least three days old. Both need `GITHUB_TOKEN`. A pin to a release younger than three days makes `just update` exit 2 until it ages. zizmor must pass.
+- Format Nix with `nix fmt`, never `nixfmt` directly.
 - Public text follows the voice guide. Name no project until the repo has moved into the org.
 - A claim about how the work is made belongs on `docs/AI.md`, and nowhere else.

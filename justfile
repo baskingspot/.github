@@ -11,17 +11,19 @@ tools := justfile_directory() + "/brand/tools/brand.py"
 default:
     @just --list
 
-[doc("Check formatting of the Nix, the Markdown, and this justfile")]
+[doc("Check formatting, lint the workflows, and audit them with zizmor")]
 [group("lint")]
 lint:
-    nixfmt --check flake.nix
+    nix fmt -- --ci
     oxfmt --check README.md AGENTS.md brand/README.md docs profile templates
+    actionlint
+    zizmor .
     just --fmt --check
 
 [doc("Format everything lint checks")]
 [group("lint")]
 fmt:
-    nixfmt flake.nix
+    nix fmt
     oxfmt README.md AGENTS.md brand/README.md docs profile templates
     just --fmt
 
@@ -32,12 +34,24 @@ ci: lint
 [doc("Render each SVG under DIR to a PNG next to it, with the pinned fonts")]
 [group("brand")]
 brand-render DIR="brand":
-    fd -e svg . {{ DIR }} -x resvg --skip-system-fonts --use-fonts-dir "$BRAND_FONT_DIR" {} {.}.png
+    {{ brand }} fd -e svg . {{ DIR }} -x resvg --skip-system-fonts --use-fonts-dir "$BRAND_FONT_DIR" {} {.}.png
 
 [doc("Show an SVG in the terminal, rendered with the pinned fonts. For a PNG, run chafa on it")]
 [group("brand")]
 brand-view FILE:
-    resvg --skip-system-fonts --use-fonts-dir "$BRAND_FONT_DIR" {{ FILE }} -c | chafa -
+    {{ brand }} sh -c 'resvg --skip-system-fonts --use-fonts-dir "$BRAND_FONT_DIR" "$1" -c | chafa -' _ {{ FILE }}
+
+# Three days of trailing age: a release has to survive that long before we
+# pin to it, so a hijacked tag has time to be caught.
+[doc("Pin every Action to a commit SHA, leaving versions as they are. Needs GITHUB_TOKEN")]
+[group("actions")]
+pin:
+    pinact run
+
+[doc("Pin every Action to the newest release at least three days old. Needs GITHUB_TOKEN")]
+[group("actions")]
+update:
+    pinact run --update --min-age 3
 
 [doc("Write the org assets to brand/assets: avatar, logos, favicon, badge, and social card")]
 [group("brand")]

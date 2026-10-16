@@ -56,9 +56,10 @@
                 oxfmt
                 fd
                 chafa
-                nixfmt
+                actionlint
                 zizmor
                 pinact
+                gh
               ]
               ++ [
                 (python3.withPackages (ps: [
