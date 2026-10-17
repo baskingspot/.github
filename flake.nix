@@ -37,7 +37,6 @@
               with pkgs;
               [
                 chafa
-                oxfmt
                 oxlint
                 resvg
                 ruff
