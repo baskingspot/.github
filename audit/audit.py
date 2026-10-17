@@ -25,6 +25,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+import repo_settings
+
 ORG = "baskingspot"
 PALETTE = {"#16191d", "#f4f1ec", "#d4412b", "#58616c"}
 BIO = "Zig is cold-blooded. Come bask. Libraries between std and your application."
@@ -168,19 +170,20 @@ def check_metadata(repo: Repo, roster: dict[str, dict[str, str]]) -> None:
             "homepage",
             f"has a homepage but is not in the site roster: {homepage}",
         )
-    expect = {"has_wiki": False, "has_projects": False, "delete_branch_on_merge": True}
-    for key, value in expect.items():
-        if meta.get(key) != value:
-            repo.add("error", "settings", f"{key} is {meta.get(key)}, want {value}")
     if meta.get("default_branch") != "main":
         repo.add("error", "settings", f"default branch is {meta.get('default_branch')}")
     license_info = meta.get("license") or {}
     if (license_info or {}).get("spdx_id") != "MIT":
         repo.add("error", "license", "GitHub does not detect an MIT license")
-    perms = gh_json(f"repos/{ORG}/{repo.name}/actions/permissions/workflow")
-    if perms.get("default_workflow_permissions") != "read":
-        repo.add("error", "settings", "default workflow permissions are not read-only")
+    check_settings(repo)
     check_social(repo)
+
+
+def check_settings(repo: Repo) -> None:
+    """The repo's settings against audit/settings.json, the one list of them."""
+    have = repo_settings.read_repo(repo_settings.GhApi(), repo.name)
+    for drift in repo_settings.diff(repo_settings.want_repo(), have):
+        repo.add("error", "settings", f"{drift}. `just settings --apply` fixes it")
 
 
 def check_social(repo: Repo) -> None:
@@ -528,6 +531,18 @@ def check_docker(repo: Repo) -> None:
 
 def check_org(site: Repo | None, repos: dict[str, Repo]) -> list[Finding]:
     findings: list[Finding] = []
+    org_drift = repo_settings.diff(
+        repo_settings.want_org(), repo_settings.read_org(repo_settings.GhApi())
+    )
+    for drift in org_drift:
+        findings.append(
+            Finding(
+                "error",
+                "(org)",
+                "settings",
+                f"{drift}. `just settings --apply` fixes it",
+            )
+        )
     org = json.loads(run("gh", "api", f"orgs/{ORG}"))
     if org.get("description") != BIO:
         findings.append(

@@ -32,9 +32,20 @@ fmt:
     ruff format brand/tools audit
     just --fmt
 
+[doc("Run the tests for the audit and the settings tool, which need no network")]
+[group("test")]
+test:
+    cd audit && python3 -m unittest -v test_repo_settings
+
 [doc("Everything CI runs")]
 [group("ci")]
-ci: lint
+ci: test lint
+
+[doc("Check the org's settings and every repo's against audit/settings.json, the one list of them. Add --apply to change what differs, --org for the org alone, or --repo NAME for one repo. Needs gh and a token that administers the org. Exit 1 on drift")]
+[group("audit")]
+[no-cd]
+settings *ARGS:
+    {{ brand }} python3 {{ justfile_directory() }}/audit/repo_settings.py {{ ARGS }}
 
 [doc("Audit every public repo in the org for conformance: metadata, files, justfile and workflow style, README hygiene, the brand marks, site registration, and files that repeat. Pass a repo name to audit one. Needs gh. Exit 1 on any error")]
 [group("audit")]
