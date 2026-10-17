@@ -7,10 +7,15 @@ import repo_settings as rs
 
 
 class FakeApi:
-    """Answers reads from a table and records every write."""
+    """Answers reads from a table and records every write.
 
-    def __init__(self, reads: dict[str, Any]) -> None:
+    A key in `refuse` makes any PATCH that carries it fail with a 422, as
+    GitHub does for a setting it will not change.
+    """
+
+    def __init__(self, reads: dict[str, Any], refuse: tuple[str, ...] = ()) -> None:
         self.reads = reads
+        self.refuse = refuse
         self.writes: list[tuple[str, str, dict[str, Any] | None]] = []
 
     def get(self, path: str) -> Any:
@@ -20,6 +25,8 @@ class FakeApi:
         return value
 
     def send(self, method: str, path: str, body: dict[str, Any] | None = None) -> None:
+        if body and any(key in body for key in self.refuse):
+            raise rs.ApiError(f"{method} {path}: refused", 422)
         self.writes.append((method, path, body))
 
 
@@ -33,7 +40,7 @@ def matching_repo() -> dict[str, Any]:
     base = "repos/baskingspot/r"
     return {
         base: meta,
-        f"{base}/vulnerability-alerts": {"_status": 204},
+        f"{base}/vulnerability-alerts": rs.ApiError("off", 404),
         f"{base}/automated-security-fixes": {
             "enabled": cfg["automated_security_fixes"]
         },
@@ -78,9 +85,16 @@ class DiffTest(unittest.TestCase):
         reads["repos/baskingspot/r/vulnerability-alerts"] = rs.ApiError("off", 404)
         have = rs.read_repo(FakeApi(reads), "r")
         self.assertIs(have["vulnerability_alerts"], False)
+        self.assertEqual(rs.diff(rs.want_repo(), have), [])
+
+    def test_alerts_on_is_drift_because_the_org_wants_them_off(self) -> None:
+        reads = matching_repo()
+        reads["repos/baskingspot/r/vulnerability-alerts"] = {"_status": 204}
+        have = rs.read_repo(FakeApi(reads), "r")
+        self.assertIs(have["vulnerability_alerts"], True)
         self.assertEqual(
             rs.diff(rs.want_repo(), have),
-            [rs.Drift("vulnerability_alerts", True, False)],
+            [rs.Drift("vulnerability_alerts", False, True)],
         )
 
     def test_a_server_error_is_not_swallowed(self) -> None:
@@ -128,6 +142,42 @@ class ApplyTest(unittest.TestCase):
             ],
         )
 
+    def test_a_refused_setting_does_not_stop_the_others(self) -> None:
+        api = FakeApi({}, refuse=("allow_forking",))
+        refused = rs.apply_repo(
+            api,
+            "r",
+            [
+                rs.Drift("fields.allow_forking", True, False),
+                rs.Drift("fields.has_wiki", False, True),
+            ],
+        )
+        self.assertEqual(
+            api.writes, [("PATCH", "repos/baskingspot/r", {"has_wiki": False})]
+        )
+        self.assertEqual(len(refused), 1)
+        self.assertIn("allow_forking", refused[0])
+
+    def test_a_server_error_while_applying_is_not_swallowed(self) -> None:
+        class Broken(FakeApi):
+            def send(
+                self, method: str, path: str, body: dict[str, Any] | None = None
+            ) -> None:
+                raise rs.ApiError("boom", 500)
+
+        with self.assertRaises(rs.ApiError):
+            rs.apply_repo(Broken({}), "r", [rs.Drift("fields.has_wiki", False, True)])
+
+    def test_a_private_repo_does_not_drift_on_forking(self) -> None:
+        reads = matching_repo()
+        reads["repos/baskingspot/r"]["private"] = True
+        reads["repos/baskingspot/r"]["allow_forking"] = False
+        reads["repos/baskingspot/r"]["allow_auto_merge"] = False
+        have = rs.read_repo(FakeApi(reads), "r")
+        self.assertEqual(have["fields.allow_forking"], rs.UNAVAILABLE)
+        self.assertEqual(have["fields.allow_auto_merge"], rs.UNAVAILABLE)
+        self.assertEqual(rs.diff(rs.want_repo(), have), [])
+
     def test_pages_are_turned_off_by_deleting_the_site(self) -> None:
         api = FakeApi({})
         rs.apply_repo(api, "r", [rs.Drift("fields.has_pages", False, True)])
@@ -166,6 +216,7 @@ class ConfigTest(unittest.TestCase):
     ) -> None:
         cfg = rs.CONFIG["repo"]
         self.assertEqual(set(cfg["security_and_analysis"].values()), {"disabled"})
+        self.assertIs(cfg["vulnerability_alerts"], False)
         self.assertIs(cfg["automated_security_fixes"], False)
         self.assertIs(cfg["private_vulnerability_reporting"], True)
         self.assertEqual(cfg["code_scanning_default_setup"], "not-configured")

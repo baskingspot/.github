@@ -21,6 +21,7 @@ import json
 import re
 import subprocess
 import sys
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
@@ -132,6 +133,12 @@ def read_repo(api: Api, repo: str) -> dict[str, Any]:
     have: dict[str, Any] = {}
     for name in CONFIG["repo"]["fields"]:
         have[f"fields.{name}"] = meta.get(name, UNAVAILABLE)
+    if meta.get("private"):
+        # The org does not allow forking private repos, so GitHub refuses the
+        # setting. Auto-merge is accepted and ignored: a private repo on the
+        # free plan cannot have it.
+        have["fields.allow_forking"] = UNAVAILABLE
+        have["fields.allow_auto_merge"] = UNAVAILABLE
     analysis = meta.get("security_and_analysis") or {}
     for name in CONFIG["repo"]["security_and_analysis"]:
         have[f"security_and_analysis.{name}"] = (analysis.get(name) or {}).get(
@@ -194,8 +201,13 @@ def _toggle(api: Api, path: str, on: bool) -> None:
     api.send("PUT" if on else "DELETE", path)
 
 
-def apply_repo(api: Api, repo: str, drifts: list[Drift]) -> None:
-    """Change the drifted settings. Each group goes to the endpoint that owns it."""
+def apply_repo(api: Api, repo: str, drifts: list[Drift]) -> list[str]:
+    """Change the drifted settings. Each group goes to the endpoint that owns it.
+
+    Returns the settings GitHub refused, as messages. One refused setting must
+    not stop the others, so a refused PATCH is retried one key at a time.
+    """
+    refused: list[str] = []
     base = f"repos/{ORG}/{repo}"
     keys = {drift.key: drift.want for drift in drifts}
     patch: dict[str, Any] = {}
@@ -206,7 +218,18 @@ def apply_repo(api: Api, repo: str, drifts: list[Drift]) -> None:
         elif group == "security_and_analysis":
             patch.setdefault("security_and_analysis", {})[name] = {"status": value}
     if patch:
-        api.send("PATCH", base, patch)
+        try:
+            api.send("PATCH", base, patch)
+        except ApiError as error:
+            if error.status != 422:
+                raise
+            for name, value in patch.items():
+                try:
+                    api.send("PATCH", base, {name: value})
+                except ApiError as single:
+                    if single.status != 422:
+                        raise
+                    refused.append(f"{name}: {single}")
     if keys.get("fields.has_pages") is False:
         api.send("DELETE", f"{base}/pages")
     if "vulnerability_alerts" in keys:
@@ -237,6 +260,7 @@ def apply_repo(api: Api, repo: str, drifts: list[Drift]) -> None:
             f"{base}/actions/permissions/workflow",
             dict(CONFIG["repo"]["actions_workflow"]),
         )
+    return refused
 
 
 def apply_org(api: Api, drifts: list[Drift]) -> None:
@@ -273,12 +297,19 @@ def main() -> int:
         nonlocal drift_found
         drifts = diff(want, read())
         if drifts and args.apply:
-            apply(drifts)
+            for refusal in apply(drifts) or []:
+                print(f"{label}: GitHub refused {refusal}")
             for drift in drifts:
                 print(
-                    f"{label}: set {drift.key} to {drift.want!r} (was {drift.have!r})"
+                    f"{label}: tried {drift.key} -> {drift.want!r} (was {drift.have!r})"
                 )
-            drifts = diff(want, read())
+            # A read right after a write can be stale, so look again before
+            # calling a setting drift.
+            for _ in range(4):
+                drifts = diff(want, read())
+                if not drifts:
+                    break
+                time.sleep(2)
         for drift in drifts:
             drift_found = True
             print(f"{label}: {drift}")

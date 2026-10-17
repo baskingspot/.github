@@ -39,7 +39,7 @@
       "secret_scanning_validity_checks": "disabled",
       "dependabot_security_updates": "disabled"
     },
-    "vulnerability_alerts": true,
+    "vulnerability_alerts": false,
     "automated_security_fixes": false,
     "private_vulnerability_reporting": true,
     "code_scanning_default_setup": "not-configured",

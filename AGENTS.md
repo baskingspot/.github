@@ -25,6 +25,7 @@ just ci
 - `docs/VOICE.md` is the voice guide. Read all of it before you write anything public.
 - `docs/AI.md` is the disclosure page. Every statement on it must be true.
 - `brand/` holds the brand: the system in `README.md`, the org's files in `assets/`, and the generator in `tools/`. Never edit an SVG in `assets/` by hand. Change the tool and run `just brand-org`.
+- `audit/settings.json` is the one list of the org's and every repo's GitHub settings: features, merge methods, security, Actions. `audit/repo_settings.py` reads, checks, and applies it, with tests. `just settings` checks, and `just settings --apply` changes what differs. A new setting is a line in the JSON, and the audit and the tool both pick it up. Do not set these by hand in the UI, because the next check will call it drift.
 - `audit/audit.py` checks the whole org for conformance. `just audit` runs it, and the `baskingspot-audit` skill says how to read the report. Its rules mirror the house shape, so change the rule and the script together.
 - `templates/program/release-notes.md` is the template for `docs/releases/vX.Y.Z.md` in a repo that ships a program. The release workflow uses that file as the release notes and adds the install section.
 - `templates/library/README.md` is the README every library starts from. `just new-library` fills it in.
