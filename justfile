@@ -17,9 +17,9 @@ lint:
     nix fmt -- --ci
     oxfmt --check README.md AGENTS.md brand/README.md docs profile templates brand/tools .github
     oxlint brand/tools
-    ruff check brand/tools audit
-    ruff format --check brand/tools audit
-    ty check brand/tools audit
+    ruff check brand/tools audit scaffold
+    ruff format --check brand/tools audit scaffold
+    ty check brand/tools audit scaffold
     actionlint
     zizmor .
     just --fmt --check
@@ -29,17 +29,24 @@ lint:
 fmt:
     nix fmt
     oxfmt README.md AGENTS.md brand/README.md docs profile templates brand/tools .github
-    ruff format brand/tools audit
+    ruff format brand/tools audit scaffold
     just --fmt
 
 [doc("Run the tests for the audit and the settings tool, which need no network")]
 [group("test")]
 test:
     cd audit && python3 -m unittest -v test_repo_settings test_audit
+    cd scaffold && python3 -m unittest -v test_incubate
 
 [doc("Everything CI runs")]
 [group("ci")]
 ci: test lint
+
+[doc("Start a new Zig library: a repo in DIR from the zig-library template with a license, README, AGENTS.md, justfile, and CI, created as baskingspot/NAME, marked incubating, with the org's settings applied. DIR is required and must end in NAME. DESCRIPTION is one sentence ending in a period. Add --private, or --local to stop before GitHub")]
+[group("new")]
+[no-cd]
+incubate NAME DIR DESCRIPTION="An incubating Zig library." *FLAGS:
+    {{ brand }} python3 {{ justfile_directory() }}/scaffold/incubate.py {{ NAME }} {{ quote(DIR) }} --description {{ quote(DESCRIPTION) }} {{ FLAGS }}
 
 [doc("Check the org's settings and every repo's against audit/settings.json, the one list of them. Add --apply to change what differs, --org for the org alone, or --repo NAME for one repo. Needs gh and a token that administers the org. Exit 1 on drift")]
 [group("audit")]
