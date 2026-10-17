@@ -65,5 +65,20 @@ class StageTest(unittest.TestCase):
         self.assertEqual(finding.level, "info")
 
 
+class PhraseTests(unittest.TestCase):
+    def test_reserved_seats_are_found_singular_and_plural(self) -> None:
+        self.assertEqual(
+            audit.phrase_hits("Any other level is a Reserved Seat."), ["reserved seat"]
+        )
+        self.assertEqual(
+            audit.phrase_hits("Three reserved seats, one empty seat."),
+            ["reserved seat", "empty seat"],
+        )
+
+    def test_plain_text_and_lookalikes_are_clean(self) -> None:
+        self.assertEqual(audit.phrase_hits("Take a seat. The seats are reserved."), [])
+        self.assertEqual(audit.phrase_hits("unreserved seating"), [])
+
+
 if __name__ == "__main__":
     unittest.main()

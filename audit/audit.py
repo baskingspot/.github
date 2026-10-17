@@ -70,6 +70,13 @@ VOICE_WORDS = [
     "moreover",
     "additionally",
 ]
+# Phrases that read as machine-made. Stock metaphors for "not built yet":
+# say what is missing, in plain words. Matched as whole words, case-folded,
+# singular or plural.
+VOICE_PHRASES = [
+    "reserved seat",
+    "empty seat",
+]
 STATUS_WORDS = ["currently", "not yet", "recently", "coming soon", "work in progress"]
 # Files that repeat on purpose or are generated. They are not dedupe candidates.
 DEDUPE_SKIP = {
@@ -122,6 +129,12 @@ def gh_json(path: str) -> Any:
 
 def normal(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip().rstrip(".").strip()
+
+
+def phrase_hits(text: str) -> list[str]:
+    """The VOICE_PHRASES found in text, in list order."""
+    lower = text.lower()
+    return [p for p in VOICE_PHRASES if re.search(rf"\b{re.escape(p)}s?\b", lower)]
 
 
 def readme_tagline(readme: str) -> str | None:
@@ -404,6 +417,13 @@ def check_readme(repo: Repo) -> None:
             "warn",
             "voice",
             f"README uses words from the voice guide's list: {', '.join(hits)}",
+        )
+    phrases = phrase_hits(readme)
+    if phrases:
+        repo.add(
+            "warn",
+            "voice",
+            f"README uses phrases from the voice guide's list: {', '.join(phrases)}",
         )
     status = [w for w in STATUS_WORDS if w in lower]
     if status:

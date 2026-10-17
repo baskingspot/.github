@@ -140,6 +140,13 @@ are my additions, not measured ones.
 Replace by saying the concrete thing. Don't swap to a synonym. A "robust"
 parser that becomes a "reliable" parser has changed nothing.
 
+### Phrases
+
+Some tells are phrases, not words. _Reserved seat_ and _empty seat_ are
+the one that spread through the compress docs, as a stock metaphor for
+"this isn't built yet". Say what is missing: "other qualities return
+`error.Unimplemented`." The audit warns on these in a README.
+
 ### Punctuation
 
 Don't use em dashes in new org prose. Use a period, a comma, or a colon.
