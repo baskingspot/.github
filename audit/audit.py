@@ -22,6 +22,7 @@ import sys
 import tempfile
 import urllib.request
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -656,6 +657,34 @@ def report(repos: dict[str, Repo], org: list[Finding], repeated: list[str]) -> i
     return 1 if errors else 0
 
 
+INCUBATION_LIMIT_DAYS = 90
+
+
+def stage_finding(name: str, detail: dict[str, Any], now: datetime) -> Finding | None:
+    """What to say about a repo whose stage is not `stable`, or None if it is stable.
+
+    An incubating or mirror repo is not audited. An incubating repo that is
+    older than the limit gets a warning, so one cannot sit there forgotten.
+    """
+    stage = (detail.get("custom_properties") or {}).get("stage", "stable")
+    if stage == "stable":
+        return None
+    age = (now - datetime.fromisoformat(detail["created_at"])).days
+    if stage == "incubating" and age > INCUBATION_LIMIT_DAYS:
+        return Finding(
+            "warn",
+            name,
+            "stage",
+            f"{name} has been incubating for {age} days. Graduate it or archive it",
+        )
+    return Finding(
+        "info",
+        name,
+        "stage",
+        f"{name} is {stage}, so it is not audited ({age} days old)",
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--repo", help="audit one repo, by name")
@@ -670,11 +699,17 @@ def main() -> int:
             if not m["archived"] and not m["fork"] and not m["private"]
         }
         repos: dict[str, Repo] = {}
+        staged: list[Finding] = []
+        now = datetime.now(timezone.utc)
         for name in sorted(metas):
             if args.repo and name != args.repo:
                 continue
             # The list endpoint omits some settings, so read each repo itself.
             detail = gh_json(f"repos/{ORG}/{name}")
+            note = stage_finding(name, detail, now)
+            if note is not None:
+                staged.append(note)
+                continue
             repos[name] = Repo(name, detail, clone(name, scratch))
         # The roster and the router come from `site`, even for a one-repo run.
         site = repos.get("site") or Repo("site", metas["site"], clone("site", scratch))
@@ -690,7 +725,7 @@ def main() -> int:
             check_brand(repo, scratch)
             check_site(repo, roster, router)
             check_docker(repo)
-        org = [] if args.repo else check_org(site, repos)
+        org = ([] if args.repo else check_org(site, repos)) + staged
         repeated = [] if args.repo else dedupe(repos)
         return report(repos, org, repeated)
 

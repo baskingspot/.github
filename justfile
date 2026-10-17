@@ -35,7 +35,7 @@ fmt:
 [doc("Run the tests for the audit and the settings tool, which need no network")]
 [group("test")]
 test:
-    cd audit && python3 -m unittest -v test_repo_settings
+    cd audit && python3 -m unittest -v test_repo_settings test_audit
 
 [doc("Everything CI runs")]
 [group("ci")]
