@@ -17,9 +17,9 @@ lint:
     nix fmt -- --ci
     oxfmt --check README.md AGENTS.md brand/README.md docs profile templates brand/tools .github
     oxlint brand/tools
-    ruff check brand/tools audit scaffold
-    ruff format --check brand/tools audit scaffold
-    ty check brand/tools audit scaffold
+    ruff check brand/tools audit scripts scaffold
+    ruff format --check brand/tools audit scripts scaffold
+    ty check brand/tools audit scripts scaffold
     actionlint
     zizmor .
     just --fmt --check
@@ -29,7 +29,7 @@ lint:
 fmt:
     nix fmt
     oxfmt README.md AGENTS.md brand/README.md docs profile templates brand/tools .github
-    ruff format brand/tools audit scaffold
+    ruff format brand/tools audit scripts scaffold
     just --fmt
 
 [doc("Run the tests for the audit and the settings tool, which need no network")]
@@ -53,6 +53,12 @@ incubate NAME DIR DESCRIPTION="An incubating Zig library." *FLAGS:
 [no-cd]
 settings *ARGS:
     {{ brand }} python3 {{ justfile_directory() }}/audit/repo_settings.py {{ ARGS }}
+
+[doc("Align the org's Zig dependency pins across the checkouts in ~/code/baskingspot. Pass --dry-run, --dep, --ref, --commit, --push")]
+[group("audit")]
+[no-cd]
+bump-deps *ARGS:
+    python3 {{ justfile_directory() }}/scripts/update-deps.py {{ ARGS }}
 
 [doc("Audit every public repo in the org for conformance: metadata, files, justfile and workflow style, README hygiene, the brand marks, site registration, and files that repeat. Pass a repo name to audit one. Needs gh. Exit 1 on any error")]
 [group("audit")]
