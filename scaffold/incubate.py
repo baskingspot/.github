@@ -124,6 +124,21 @@ Zig 0.16 only. The flake is the tool contract, from `baskingspot/nix`: `nix deve
 - Format with `zig fmt` and lint with `ziglint`. `just fmt` and `just lint` run both.
 - This repo's GitHub settings come from `baskingspot/.github`, with `just settings`. Do not change them by hand.
 - To graduate the project, follow the `baskingspot-new-repo` skill: logos, a real README, and the audit passing.
+
+## Changelog
+
+`CHANGELOG.md` is one file, Keep a Changelog format, newest first. Add a bullet
+under `## [Unreleased]` in the same change that alters something a user can
+notice: the public API, expected behavior, performance a benchmark row would
+show, a supported backend, or the build requirements. Docs, CI, and internal
+refactors do not need one unless they change how someone uses the package.
+
+Write from the user's side: what changed, and what they must do about it. Name
+the symbol, flag, or error. One line, under Added, Changed, Fixed, or Removed.
+
+To release, dispatch the repo's `release.yml` with the version. The workflow
+moves the Unreleased section into a dated heading, sets `.version` in
+`build.zig.zon`, commits, tags, and opens the GitHub release. Do not tag by hand.
 """
 
 
@@ -182,6 +197,38 @@ jobs:
     uses: baskingspot/gh-actions/.github/workflows/ci.yml@{sha} # {tag}
     secrets:
       CACHIX_AUTH_TOKEN: ${{{{ secrets.CACHIX_AUTH_TOKEN }}}}
+"""
+
+
+def render_changelog(name: str) -> str:
+    return f"""# Changelog
+
+All notable changes to {name} are recorded here. The format follows
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+## [Unreleased]
+"""
+
+
+def render_release(sha: str, tag: str) -> str:
+    return f"""name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: The version without the leading v, such as 0.1.0
+        required: true
+
+permissions: {{}}
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    uses: baskingspot/gh-actions/.github/workflows/release-library.yml@{sha} # {tag}
+    with:
+      version: ${{{{ inputs.version }}}}
 """
 
 
@@ -244,11 +291,13 @@ def scaffold(name: str, directory: Path, description: str, tag: str, sha: str) -
     write(directory, "LICENSE", render_license(datetime.now(timezone.utc).year))
     write(directory, "README.md", render_readme(name, description))
     write(directory, "AGENTS.md", render_agents(name, description))
+    write(directory, "CHANGELOG.md", render_changelog(name))
     write(directory, "justfile", render_justfile(name, description))
     write(directory, ".ziglint.zon", ZIGLINT)
     write(directory, ".github/actionlint.yaml", ACTIONLINT)
     write(directory, ".github/workflows/ci.yml", render_ci(sha, tag))
     write(directory, ".github/workflows/zizmor.yml", render_zizmor(sha, tag))
+    write(directory, ".github/workflows/release.yml", render_release(sha, tag))
     # Nix reads only tracked files, and the global git ignore hides .envrc.
     run("git", "add", "-N", ".", cwd=directory)
     run("git", "add", "-f", "-N", ".envrc", cwd=directory)
