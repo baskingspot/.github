@@ -128,3 +128,34 @@ class LicenseTests(unittest.TestCase):
             audit.license_text_matches("MIT", "Apache License\nVersion 2.0")
         )
         self.assertFalse(audit.license_text_matches("BSD-3-Clause", "anything"))
+
+
+class ReleaseTests(unittest.TestCase):
+    def test_a_tag_with_a_changelog_section_and_matching_manifest_is_clean(
+        self,
+    ) -> None:
+        self.assertEqual(
+            audit.release_findings(
+                "0.2.0",
+                "## [Unreleased]\n\n## [0.2.0] - 2026-10-19\n",
+                '.version = "0.2.0",',
+            ),
+            [],
+        )
+
+    def test_a_tag_without_its_changelog_section_is_an_error(self) -> None:
+        errors = audit.release_findings(
+            "0.2.0", "## [Unreleased]\n", '.version = "0.2.0",'
+        )
+        self.assertEqual(len(errors), 1)
+        self.assertIn("no `## [0.2.0]` section", errors[0])
+
+    def test_a_manifest_that_disagrees_with_the_tag_is_an_error(self) -> None:
+        errors = audit.release_findings("0.2.0", "## [0.2.0]\n", '.version = "0.1.0",')
+        self.assertEqual(len(errors), 1)
+        self.assertIn("says 0.1.0", errors[0])
+
+    def test_a_manifest_without_a_version_is_an_error(self) -> None:
+        errors = audit.release_findings("0.2.0", "## [0.2.0]\n", "")
+        self.assertEqual(len(errors), 1)
+        self.assertIn("no .version field", errors[0])

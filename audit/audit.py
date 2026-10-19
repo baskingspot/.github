@@ -237,6 +237,37 @@ def check_topics(repo: Repo, topics: list[str]) -> None:
         repo.add("error", "topics", f"missing the topic {named}")
 
 
+def release_findings(version: str, changelog: str, manifest: str) -> list[str]:
+    """What disagrees with the latest release, given the files at HEAD."""
+    errors = []
+    if f"## [{version}]" not in changelog:
+        errors.append(
+            f"the latest tag v{version} has no `## [{version}]` section in CHANGELOG.md"
+        )
+    match = re.search(r'^\s*\.version = "([^"]*)"', manifest, re.MULTILINE)
+    if match is None:
+        errors.append("build.zig.zon has no .version field")
+    elif match.group(1) != version:
+        errors.append(
+            f"build.zig.zon says {match.group(1)}, the latest tag is v{version}"
+        )
+    return errors
+
+
+def check_release(repo: Repo) -> None:
+    """A release is a tag with a changelog section; the manifest agrees."""
+    releases = gh_json(f"repos/{ORG}/{repo.name}/releases?per_page=1")
+    if not releases:
+        return
+    tag = str(releases[0].get("tag_name") or "")
+    version = tag.removeprefix("v")
+    errors = release_findings(
+        version, repo.read("CHANGELOG.md") or "", repo.read("build.zig.zon") or ""
+    )
+    for error in errors:
+        repo.add("error", "release", error)
+
+
 def check_settings(repo: Repo) -> None:
     """The repo's settings against audit/settings.json, the one list of them."""
     have = repo_settings.read_repo(repo_settings.GhApi(), repo.name)
@@ -786,6 +817,7 @@ def main() -> int:
             check_flake(repo)
             check_justfile(repo)
             check_workflows(repo, release)
+            check_release(repo)
             check_readme(repo)
             check_brand(repo, scratch)
             check_site(repo, roster, router)
