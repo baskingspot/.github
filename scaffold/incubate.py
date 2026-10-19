@@ -274,7 +274,10 @@ def publish(name: str, directory: Path, description: str, private: bool) -> None
         "gh", "repo", "create", f"{ORG}/{name}", visibility,
         "--description", description, "--source", str(directory), "--remote", "origin",
     )  # fmt: skip
-    run("gh", "repo", "edit", f"{ORG}/{name}", "--add-topic", "zig")
+    run(
+        "gh", "repo", "edit", f"{ORG}/{name}",
+        "--add-topic", "zig", "--add-topic", "zig-lang", "--add-topic", "zig-package",
+    )  # fmt: skip
     step("stage = incubating")
     run(
         "gh", "api", "-X", "PATCH", f"repos/{ORG}/{name}/properties/values",

@@ -82,3 +82,35 @@ class PhraseTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TopicTests(unittest.TestCase):
+    def test_a_zig_repo_carries_zig_and_zig_lang(self) -> None:
+        self.assertEqual(
+            audit.missing_topics(zig=True, package=False, topics=["zig"]), ["zig-lang"]
+        )
+        self.assertEqual(
+            audit.missing_topics(zig=True, package=False, topics=["zig", "zig-lang"]),
+            [],
+        )
+
+    def test_a_zig_package_also_carries_zig_package(self) -> None:
+        self.assertEqual(
+            audit.missing_topics(zig=True, package=True, topics=["zig", "zig-lang"]),
+            ["zig-package"],
+        )
+
+    def test_specific_topics_are_allowed_on_top(self) -> None:
+        self.assertEqual(
+            audit.missing_topics(
+                zig=True,
+                package=True,
+                topics=["zig", "zig-lang", "zig-package", "zstd"],
+            ),
+            [],
+        )
+
+    def test_a_repo_that_is_not_zig_needs_none_of_them(self) -> None:
+        self.assertEqual(
+            audit.missing_topics(zig=False, package=False, topics=["nix"]), []
+        )

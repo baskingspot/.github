@@ -170,10 +170,7 @@ def check_metadata(repo: Repo, roster: dict[str, dict[str, str]]) -> None:
                 "about",
                 f"the description does not end with a period: {description!r}",
             )
-    if not topics and repo.name != META_REPO:
-        repo.add("error", "topics", "no topics")
-    if (repo.path / "build.zig").is_file() and "zig" not in topics:
-        repo.add("error", "topics", "a Zig repo needs the topic `zig`")
+    check_topics(repo, topics)
     homepage = str(meta.get("homepage") or "")
     want = f"https://baskingspot.dev/{repo.name}/" if repo.name in roster else ""
     if want and homepage != want:
@@ -191,6 +188,36 @@ def check_metadata(repo: Repo, roster: dict[str, dict[str, str]]) -> None:
         repo.add("error", "license", "GitHub does not detect an MIT license")
     check_settings(repo)
     check_social(repo)
+
+
+# The topics every repo that builds with Zig carries. A repo someone imports
+# also carries `zig-package`. Specific topics, such as a codec name, go on top.
+ZIG_TOPICS = ("zig", "zig-lang")
+
+
+def missing_topics(*, zig: bool, package: bool, topics: list[str]) -> list[str]:
+    """The baseline topics a repo lacks. Empty when it conforms."""
+    if not zig:
+        return []
+    want = list(ZIG_TOPICS)
+    if package:
+        want.append("zig-package")
+    return [topic for topic in want if topic not in topics]
+
+
+def check_topics(repo: Repo, topics: list[str]) -> None:
+    """Every repo has topics, and a Zig repo has the org's baseline."""
+    if not topics and repo.name != META_REPO:
+        repo.add("error", "topics", "no topics")
+        return
+    missing = missing_topics(
+        zig=(repo.path / "build.zig").is_file(),
+        package=(repo.path / "build.zig.zon").is_file(),
+        topics=topics,
+    )
+    if missing:
+        named = ", ".join(f"`{topic}`" for topic in missing)
+        repo.add("error", "topics", f"missing the topic {named}")
 
 
 def check_settings(repo: Repo) -> None:
