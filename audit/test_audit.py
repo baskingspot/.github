@@ -114,3 +114,17 @@ class TopicTests(unittest.TestCase):
         self.assertEqual(
             audit.missing_topics(zig=False, package=False, topics=["nix"]), []
         )
+
+
+class LicenseTests(unittest.TestCase):
+    def test_mit_and_apache_texts_match_their_spdx_id(self) -> None:
+        self.assertTrue(
+            audit.license_text_matches("MIT", "MIT License\n\nCopyright ...")
+        )
+        self.assertTrue(
+            audit.license_text_matches("Apache-2.0", "Apache License\nVersion 2.0")
+        )
+        self.assertFalse(
+            audit.license_text_matches("MIT", "Apache License\nVersion 2.0")
+        )
+        self.assertFalse(audit.license_text_matches("BSD-3-Clause", "anything"))

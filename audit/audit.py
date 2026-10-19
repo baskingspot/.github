@@ -184,10 +184,27 @@ def check_metadata(repo: Repo, roster: dict[str, dict[str, str]]) -> None:
     if meta.get("default_branch") != "main":
         repo.add("error", "settings", f"default branch is {meta.get('default_branch')}")
     license_info = meta.get("license") or {}
-    if (license_info or {}).get("spdx_id") != "MIT":
-        repo.add("error", "license", "GitHub does not detect an MIT license")
+    spdx = str((license_info or {}).get("spdx_id") or "")
+    if spdx not in LICENSES:
+        repo.add(
+            "error",
+            "license",
+            f"GitHub does not detect a license the org uses: {', '.join(LICENSES)}",
+        )
     check_settings(repo)
     check_social(repo)
+
+
+# The licenses the org accepts. MIT is the default; Apache-2.0 covers tls,
+# whose license cannot change and whose Zig-derived files carry their own MIT
+# notice. A repo that wants another one makes the case here.
+LICENSES = ("MIT", "Apache-2.0")
+
+
+def license_text_matches(spdx: str, text: str) -> bool:
+    """True when the LICENSE text is the license GitHub detected."""
+    wanted = {"MIT": "MIT License", "Apache-2.0": "Apache License"}
+    return wanted.get(spdx, "\0") in text
 
 
 # The topics every repo that builds with Zig carries. A repo someone imports
@@ -278,9 +295,10 @@ def check_files(repo: Repo) -> None:
     if "use flake" not in envrc:
         repo.add("error", "files", ".envrc does not `use flake`")
     license_text = repo.read("LICENSE") or ""
-    if license_text and "MIT License" not in license_text:
-        repo.add("error", "license", "LICENSE is not MIT")
-    elif license_text and "and contributors" not in license_text:
+    spdx = str((repo.meta.get("license") or {}).get("spdx_id") or "")
+    if license_text and not license_text_matches(spdx, license_text):
+        repo.add("error", "license", f"LICENSE text is not {spdx or 'a known license'}")
+    elif license_text and spdx == "MIT" and "and contributors" not in license_text:
         people = gh_json(f"repos/{ORG}/{repo.name}/contributors?per_page=100")
         humans = [p["login"] for p in people if p.get("type") == "User"]
         if len(humans) > 1:
