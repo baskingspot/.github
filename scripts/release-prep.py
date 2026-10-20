@@ -3,7 +3,7 @@
 
 Moves the `[Unreleased]` section of CHANGELOG.md into `## [VERSION] - DATE`,
 sets that version in build.zig.zon, and points the install command in the
-README and the guide at the tag's archive URL. It changes files and nothing
+README and the guide at `https://baskingspot.dev/NAME/vX.Y.Z`. It changes files and nothing
 else: review them, commit with your own signature, push, then dispatch the
 repository's release workflow with the same version.
 
