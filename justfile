@@ -54,6 +54,12 @@ incubate NAME DIR DESCRIPTION="An incubating Zig library." *FLAGS:
 settings *ARGS:
     {{ brand }} python3 {{ justfile_directory() }}/audit/repo_settings.py {{ ARGS }}
 
+[doc("Prepare a release in the current repo: stamp the changelog, set the version, point the install line at the tag. Review, commit, push, then dispatch the repo's release.yml")]
+[group("audit")]
+[no-cd]
+release-prep VERSION:
+    python3 {{ justfile_directory() }}/scripts/release-prep.py {{ VERSION }}
+
 [doc("Align the org's Zig dependency pins across the checkouts in ~/code/baskingspot. Pass --dry-run, --dep, --ref, --commit, --push")]
 [group("audit")]
 [no-cd]

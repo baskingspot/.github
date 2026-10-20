@@ -65,7 +65,7 @@ def newest_tag(refs: dict[str, str]) -> tuple[str, str] | None:
             continue
         version = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
         if best is None or version > best[0]:
-            best = (version, name, sha)
+            best = (version, name, refs.get(f"{ref}^{{}}", sha))
     return None if best is None else (best[1], best[2])
 
 
@@ -77,7 +77,7 @@ def resolve(dep: str, wanted: str | None) -> tuple[str, str]:
             return wanted[:12], wanted
         for ref in (f"refs/tags/{wanted}", f"refs/heads/{wanted}"):
             if ref in refs:
-                return wanted, refs[ref]
+                return wanted, refs.get(f"{ref}^{{}}", refs[ref])
         sys.exit(f"{ORG}/{dep} has no ref named {wanted}")
     tag = newest_tag(refs)
     if tag is not None:
