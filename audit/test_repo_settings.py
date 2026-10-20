@@ -52,6 +52,13 @@ def matching_repo() -> dict[str, Any]:
         },
         f"{base}/actions/permissions": dict(cfg["actions"]),
         f"{base}/actions/permissions/workflow": dict(cfg["actions_workflow"]),
+        f"{base}/rulesets?includes_parents=true": [{"id": 1, "name": rs.RULESET}],
+        f"{base}/rulesets/1": {
+            "id": 1,
+            "name": rs.RULESET,
+            "conditions": {"ref_name": {"include": ["~DEFAULT_BRANCH"], "exclude": []}},
+            "rules": [{"type": "required_signatures"}],
+        },
     }
 
 
@@ -234,3 +241,37 @@ class ConfigTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SignedCommitsTest(unittest.TestCase):
+    def test_a_repo_without_the_ruleset_drifts(self) -> None:
+        reads = matching_repo()
+        base = "repos/baskingspot/r"
+        reads[f"{base}/rulesets?includes_parents=true"] = []
+        have = rs.read_repo(FakeApi(reads), "r")
+        self.assertEqual(
+            [drift.key for drift in rs.diff(rs.want_repo(), have)], ["signed_commits"]
+        )
+
+    def test_applying_creates_the_ruleset(self) -> None:
+        base = "repos/baskingspot/r"
+        api = FakeApi({f"{base}/rulesets?includes_parents=true": []})
+        rs.apply_repo(api, "r", [rs.Drift("signed_commits", True, False)])
+        self.assertEqual(
+            api.writes,
+            [
+                (
+                    "POST",
+                    f"{base}/rulesets",
+                    {
+                        "name": rs.RULESET,
+                        "target": "branch",
+                        "enforcement": "active",
+                        "conditions": {
+                            "ref_name": {"include": ["~DEFAULT_BRANCH"], "exclude": []}
+                        },
+                        "rules": [{"type": "required_signatures"}],
+                    },
+                )
+            ],
+        )

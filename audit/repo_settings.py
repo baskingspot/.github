@@ -35,6 +35,11 @@ CONFIG = json.loads(
 # lacks the feature. It is never drift.
 UNAVAILABLE = "unavailable"
 
+# The one ruleset the org applies. It requires signed commits on the default
+# branch, so a push with an unsigned commit is rejected. GitHub's API commits
+# (the maintenance bot) are signed and pass.
+RULESET = "signed commits"
+
 
 class Api(Protocol):
     def get(self, path: str) -> Any: ...
@@ -161,6 +166,7 @@ def read_repo(api: Api, repo: str) -> dict[str, Any]:
     have["private_vulnerability_reporting"] = _optional(
         lambda: api.get(f"{base}/private-vulnerability-reporting")["enabled"]
     )
+    have["signed_commits"] = _optional(lambda: read_signed_commits(api, base))
     have["code_scanning_default_setup"] = _optional(
         lambda: api.get(f"{base}/code-scanning/default-setup")["state"]
     )
@@ -175,6 +181,60 @@ def read_repo(api: Api, repo: str) -> dict[str, Any]:
             UNAVAILABLE if workflow == UNAVAILABLE else workflow.get(name, UNAVAILABLE)
         )
     return have
+
+
+def read_signed_commits(api: Api, base: str) -> Any:
+    """True when the ruleset requires signed commits on the default branch."""
+    rulesets = api.get(f"{base}/rulesets?includes_parents=true")
+    for ruleset in rulesets:
+        if ruleset.get("name") != RULESET:
+            continue
+        detail = api.get(f"{base}/rulesets/{ruleset['id']}")
+        return any(
+            rule.get("type") == "required_signatures"
+            for rule in detail.get("rules", [])
+        )
+    return False
+
+
+def apply_signed_commits(api: Api, base: str) -> None:
+    """Create the ruleset, or add the rule to an existing one."""
+    for ruleset in api.get(f"{base}/rulesets?includes_parents=true"):
+        if ruleset.get("name") != RULESET:
+            continue
+        detail = api.get(f"{base}/rulesets/{ruleset['id']}")
+        rules = [
+            rule
+            for rule in detail.get("rules", [])
+            if rule.get("type") != "required_signatures"
+        ]
+        rules.append({"type": "required_signatures"})
+        api.send(
+            "PUT",
+            f"{base}/rulesets/{ruleset['id']}",
+            {
+                "name": RULESET,
+                "target": "branch",
+                "enforcement": "active",
+                "conditions": detail.get(
+                    "conditions",
+                    {"ref_name": {"include": ["~DEFAULT_BRANCH"], "exclude": []}},
+                ),
+                "rules": rules,
+            },
+        )
+        return
+    api.send(
+        "POST",
+        f"{base}/rulesets",
+        {
+            "name": RULESET,
+            "target": "branch",
+            "enforcement": "active",
+            "conditions": {"ref_name": {"include": ["~DEFAULT_BRANCH"], "exclude": []}},
+            "rules": [{"type": "required_signatures"}],
+        },
+    )
 
 
 def read_org(api: Api) -> dict[str, Any]:
@@ -246,6 +306,8 @@ def apply_repo(api: Api, repo: str, drifts: list[Drift]) -> list[str]:
             f"{base}/private-vulnerability-reporting",
             bool(keys["private_vulnerability_reporting"]),
         )
+    if keys.get("signed_commits") is True:
+        apply_signed_commits(api, base)
     if "code_scanning_default_setup" in keys:
         api.send(
             "PATCH",

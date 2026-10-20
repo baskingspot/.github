@@ -51,6 +51,7 @@
     "actions_workflow": {
       "default_workflow_permissions": "read",
       "can_approve_pull_request_reviews": false
-    }
+    },
+    "signed_commits": true
   }
 }
