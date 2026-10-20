@@ -25,7 +25,7 @@ import sys
 from pathlib import Path
 
 ORG = "baskingspot"
-SKIP = ("zig-pkg", "zig-out", ".zig-cache", ".git", "node_modules")
+SKIP = ("zig-pkg", "zig-out", ".zig-cache", ".git", "node_modules", "worktrees")
 TAG = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)$")
 
 
@@ -41,7 +41,16 @@ def git_top(path: Path) -> Path:
 
 
 def dirty(repo: Path) -> bool:
-    return bool(run("git", "-C", str(repo), "status", "--porcelain").strip())
+    return bool(
+        run(
+            "git",
+            "-C",
+            str(repo),
+            "status",
+            "--porcelain",
+            "--untracked-files=no",
+        ).strip()
+    )
 
 
 def remotes(dep: str) -> dict[str, str]:
@@ -69,23 +78,34 @@ def newest_tag(refs: dict[str, str]) -> tuple[str, str] | None:
     return None if best is None else (best[1], best[2])
 
 
-def resolve(dep: str, wanted: str | None) -> tuple[str, str]:
-    """The ref name and commit a dependency should be pinned to."""
+def resolve(dep: str, wanted: str | None) -> tuple[str, str, bool]:
+    """The ref name, commit, and whether the ref is a release tag."""
     refs = remotes(dep)
     if wanted:
         if re.fullmatch(r"[0-9a-f]{40}", wanted):
-            return wanted[:12], wanted
+            return wanted[:12], wanted, False
         for ref in (f"refs/tags/{wanted}", f"refs/heads/{wanted}"):
             if ref in refs:
-                return wanted, refs.get(f"{ref}^{{}}", refs[ref])
+                return (
+                    wanted,
+                    refs.get(f"{ref}^{{}}", refs[ref]),
+                    ref.startswith("refs/tags/"),
+                )
         sys.exit(f"{ORG}/{dep} has no ref named {wanted}")
     tag = newest_tag(refs)
     if tag is not None:
-        return tag
+        return tag[0], tag[1], True
     head = refs.get("HEAD")
     if head is None:
         sys.exit(f"{ORG}/{dep} has no HEAD")
-    return "main", head
+    return "main", head, False
+
+
+def pin_url(dep: str, ref: str, sha: str, tagged: bool) -> str:
+    """A tag pins through the site; anything else pins the commit on GitHub."""
+    if tagged:
+        return f"https://baskingspot.dev/{dep}/{ref}.tar.gz"
+    return f"git+https://github.com/{ORG}/{dep}#{sha}"
 
 
 def zon_files(root: Path) -> list[Path]:
@@ -115,17 +135,21 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    args.root = args.root.resolve()
     if not args.root.is_dir():
         sys.exit(f"{args.root} is not a directory")
     commit = args.commit or args.push
 
     wanted = args.dep or []
-    targets: dict[str, tuple[str, str]] = {}
+    targets: dict[str, tuple[str, str, bool]] = {}
     files = zon_files(args.root)
     if not files:
         sys.exit(f"no build.zig.zon under {args.root}")
+    pattern = re.compile(
+        rf"(?:github\.com/{ORG}/|baskingspot\.dev/)([a-z0-9-]+)(?:/|#|$)"
+    )
     for zon in files:
-        for dep in re.findall(rf"github\.com/{ORG}/([a-z0-9-]+)", zon.read_text()):
+        for dep in pattern.findall(zon.read_text()):
             if dep not in targets and (not wanted or dep in wanted):
                 targets[dep] = resolve(dep, args.ref)
     if wanted:
@@ -148,11 +172,13 @@ def main() -> int:
     for zon in files:
         repo = git_top(zon.parent)
         text = zon.read_text()
-        for dep, (ref, sha) in sorted(targets.items()):
-            if f"github.com/{ORG}/{dep}" not in text:
+        for dep, (ref, sha, tagged) in sorted(targets.items()):
+            if not pattern.search(text) or not re.search(
+                rf"(?:github\.com/{ORG}/{dep}(?:[/#]|$)|baskingspot\.dev/{dep}/v)", text
+            ):
                 continue
-            url = f"git+https://github.com/{ORG}/{dep}#{sha}"
-            if f"github.com/{ORG}/{dep}#{sha}" in text:
+            url = pin_url(dep, ref, sha, tagged)
+            if url in text:
                 continue
             before = text
             print(f"{zon.relative_to(args.root)}: {dep} -> {ref} ({sha[:12]})")
@@ -178,7 +204,9 @@ def main() -> int:
     if not args.push:
         return 0
     for repo, paths in sorted(changed.items()):
-        summary = ", ".join(f"{dep} {ref}" for dep, (ref, _) in sorted(targets.items()))
+        summary = ", ".join(
+            f"{dep} {ref}" for dep, (ref, _, _) in sorted(targets.items())
+        )
         run("git", "-C", str(repo), "add", *paths)
         run("git", "-C", str(repo), "commit", "-m", f"deps: align {summary}")
         run("git", "-C", str(repo), "push")

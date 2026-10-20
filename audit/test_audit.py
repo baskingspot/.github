@@ -178,3 +178,31 @@ class InstallCommandTests(unittest.TestCase):
 
     def test_a_repo_without_an_install_line_is_not_flagged(self) -> None:
         self.assertEqual(audit.install_findings("cli", "0.1.0", "# cli\n", ""), [])
+
+
+class DependencyUrlTests(unittest.TestCase):
+    def test_the_site_url_and_a_commit_pin_are_both_fine(self) -> None:
+        text = """
+            .url = "https://baskingspot.dev/testingx/v0.1.1.tar.gz",
+            .url = "git+https://github.com/baskingspot/stdx#e8290a5c5eb5374066b4feb4946bf06aaba8e1f1",
+        """
+        self.assertEqual(audit.dependency_url_findings(text), [])
+
+    def test_the_github_archive_url_is_an_error(self) -> None:
+        text = "https://github.com/baskingspot/cli/archive/refs/tags/v0.1.0.tar.gz"
+        errors = audit.dependency_url_findings(text)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("git+...#<commit>", errors[0])
+
+    def test_a_branch_pin_is_an_error(self) -> None:
+        errors = audit.dependency_url_findings(
+            "git+https://github.com/baskingspot/stdx#main"
+        )
+        self.assertEqual(len(errors), 1)
+
+    def test_a_site_url_without_the_archive_extension_is_an_error(self) -> None:
+        errors = audit.dependency_url_findings(
+            "https://baskingspot.dev/testingx/v0.1.1"
+        )
+        self.assertEqual(len(errors), 1)
+        self.assertIn("/vX.Y.Z.tar.gz", errors[0])

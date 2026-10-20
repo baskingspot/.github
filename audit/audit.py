@@ -265,6 +265,37 @@ def install_findings(name: str, version: str, readme: str, guide: str) -> list[s
     return errors
 
 
+DEPENDENCY = re.compile(
+    r"https://(?:github\.com/baskingspot|baskingspot\.dev)/([a-z0-9-]+)([^\s\"]*)"
+)
+
+
+def dependency_url_findings(text: str) -> list[str]:
+    """Org dependencies pin a tag through the site, or a commit on GitHub."""
+    errors = []
+    for match in DEPENDENCY.finditer(text):
+        dep, rest = match.group(1), match.group(2)
+        if match.group(0).startswith("https://baskingspot.dev/"):
+            if not re.fullmatch(r"/v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?\.tar\.gz", rest):
+                errors.append(f"{dep}: a site pin should be /vX.Y.Z.tar.gz")
+        elif not re.fullmatch(r"#[0-9a-f]{40}", rest):
+            errors.append(f"{dep}: a GitHub pin should be git+...#<commit>")
+    return errors
+
+
+def check_dependencies(repo: Repo) -> None:
+    """Every org dependency in a build.zig.zon uses one of the two forms."""
+    for zon in repo.path.rglob("build.zig.zon"):
+        if any(
+            part in ("zig-pkg", "zig-out", ".zig-cache", ".git") for part in zon.parts
+        ):
+            continue
+        for error in dependency_url_findings(
+            zon.read_text(encoding="utf-8", errors="replace")
+        ):
+            repo.add("error", "deps", f"{zon.relative_to(repo.path)}: {error}")
+
+
 def check_release(repo: Repo) -> None:
     """A release is a tag with a changelog section; the manifest agrees."""
     releases = gh_json(f"repos/{ORG}/{repo.name}/releases?per_page=1")
@@ -835,6 +866,7 @@ def main() -> int:
             check_justfile(repo)
             check_workflows(repo, release)
             check_release(repo)
+            check_dependencies(repo)
             check_readme(repo)
             check_brand(repo, scratch)
             check_site(repo, roster, router)
