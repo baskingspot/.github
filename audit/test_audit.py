@@ -159,3 +159,22 @@ class ReleaseTests(unittest.TestCase):
         errors = audit.release_findings("0.2.0", "## [0.2.0]\n", "")
         self.assertEqual(len(errors), 1)
         self.assertIn("no .version field", errors[0])
+
+
+class InstallCommandTests(unittest.TestCase):
+    def test_a_released_library_installs_through_the_site(self) -> None:
+        line = "zig fetch --save https://baskingspot.dev/cli/v0.1.0.tar.gz\n"
+        self.assertEqual(
+            audit.install_findings("cli", "0.1.0", line, line),
+            [],
+        )
+
+    def test_the_old_git_form_is_an_error_once_released(self) -> None:
+        line = "zig fetch --save git+https://github.com/baskingspot/cli\n"
+        errors = audit.install_findings("cli", "0.1.0", line, line)
+        self.assertEqual(len(errors), 2)
+        self.assertIn("README.md", errors[0])
+        self.assertIn("https://baskingspot.dev/cli/v0.1.0.tar.gz", errors[0])
+
+    def test_a_repo_without_an_install_line_is_not_flagged(self) -> None:
+        self.assertEqual(audit.install_findings("cli", "0.1.0", "# cli\n", ""), [])

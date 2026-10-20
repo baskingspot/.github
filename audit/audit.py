@@ -254,6 +254,17 @@ def release_findings(version: str, changelog: str, manifest: str) -> list[str]:
     return errors
 
 
+def install_findings(name: str, version: str, readme: str, guide: str) -> list[str]:
+    """A released library's install command names the site's version path."""
+    want = f"https://baskingspot.dev/{name}/v{version}.tar.gz"
+    errors = []
+    for label, text in (("README.md", readme), ("docs/content/_index.md", guide)):
+        lines = [line for line in text.splitlines() if "zig fetch --save" in line]
+        if lines and not any(want in line for line in lines):
+            errors.append(f"{label}: the install command should be {want}")
+    return errors
+
+
 def check_release(repo: Repo) -> None:
     """A release is a tag with a changelog section; the manifest agrees."""
     releases = gh_json(f"repos/{ORG}/{repo.name}/releases?per_page=1")
@@ -263,6 +274,12 @@ def check_release(repo: Repo) -> None:
     version = tag.removeprefix("v")
     errors = release_findings(
         version, repo.read("CHANGELOG.md") or "", repo.read("build.zig.zon") or ""
+    )
+    errors += install_findings(
+        repo.name,
+        version,
+        repo.read("README.md") or "",
+        repo.read("docs/content/_index.md") or "",
     )
     for error in errors:
         repo.add("error", "release", error)

@@ -25,6 +25,12 @@ TODO: list what a reader would assume exists and doesn't, under "Not implemented
 zig fetch --save git+https://github.com/baskingspot/{{name}}
 ```
 
+<!-- TODO: before the first release this is the only form. After `vX.Y.Z` is
+tagged, the line becomes `zig fetch --save
+https://baskingspot.dev/{{name}}/vX.Y.Z.tar.gz`; `release-prep.py` rewrites it. Never
+use the GitHub archive URL, and never point an install command at a branch.
+Delete this comment. -->
+
 Add the module to your build:
 
 ```zig

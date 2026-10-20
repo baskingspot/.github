@@ -3,8 +3,8 @@
 
 Moves the `[Unreleased]` section of CHANGELOG.md into `## [VERSION] - DATE`,
 sets that version in build.zig.zon, and points the install command in the
-README and the guide at `https://baskingspot.dev/NAME/vX.Y.Z`. It changes files and nothing
-else: review them, commit with your own signature, push, then dispatch the
+README and the guide at `https://baskingspot.dev/NAME/vX.Y.Z.tar.gz`.
+It changes files and nothing else: review them, commit with your own signature, push, then dispatch the
 repository's release workflow with the same version.
 
     python3 release-prep.py 0.2.0
@@ -76,12 +76,14 @@ def set_manifest_version(version: str) -> None:
 
 def point_install_at_tag(version: str) -> None:
     repo = github_repo()
-    archive = f"https://github.com/{repo}/archive/refs/tags/v{version}.tar.gz"
+    name = repo.split("/")[1]
+    archive = f"https://baskingspot.dev/{name}/v{version}.tar.gz"
     url = re.compile(
         rf"(?:git\+)?https://github\.com/{re.escape(repo)}(?:[#/][^\s`\"']*)?"
+        rf"|https://baskingspot\.dev/{re.escape(name)}/v[0-9]+\.[0-9]+\.[0-9]+(?:\.tar\.gz)?"
     )
-    for name in ("README.md", "docs/content/_index.md"):
-        path = Path(name)
+    for relative in ("README.md", "docs/content/_index.md"):
+        path = Path(relative)
         try:
             text = path.read_text(encoding="utf-8")
         except FileNotFoundError:
