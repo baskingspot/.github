@@ -296,6 +296,33 @@ def check_dependencies(repo: Repo) -> None:
             repo.add("error", "deps", f"{zon.relative_to(repo.path)}: {error}")
 
 
+def release_caller_findings(has_binaries: bool, caller: str) -> list[str]:
+    """A repo that ships binaries releases through the program workflow."""
+    if not has_binaries:
+        return []
+    errors = []
+    if "release-library.yml" in caller:
+        errors.append(
+            "release.yml calls release-library.yml; a repo with release.yaml uses the program workflow"
+        )
+    if "gh-actions/.github/workflows/release.yml@" not in caller:
+        errors.append(
+            "release.yaml exists but release.yml does not call the program workflow"
+        )
+    return errors
+
+
+def check_release_caller(repo: Repo) -> None:
+    """A repo with a release.yaml must use the program release caller."""
+    if repo.read(".github/release.yaml") is None:
+        return
+    errors = release_caller_findings(
+        True, repo.read(".github/workflows/release.yml") or ""
+    )
+    for error in errors:
+        repo.add("error", "release", error)
+
+
 def check_release(repo: Repo) -> None:
     """A release is a tag with a changelog section; the manifest agrees."""
     releases = gh_json(f"repos/{ORG}/{repo.name}/releases?per_page=1")
@@ -866,6 +893,7 @@ def main() -> int:
             check_justfile(repo)
             check_workflows(repo, release)
             check_release(repo)
+            check_release_caller(repo)
             check_dependencies(repo)
             check_readme(repo)
             check_brand(repo, scratch)

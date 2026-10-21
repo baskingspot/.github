@@ -58,6 +58,25 @@ def stamp_changelog(version: str) -> None:
     print(f"{path}: the Unreleased section is now [{version}]")
 
 
+def write_release_notes(version: str) -> None:
+    """A program's release notes are the changelog section, copied out."""
+    if not Path(".github/release.yaml").is_file():
+        return
+    text = Path("CHANGELOG.md").read_text(encoding="utf-8")
+    match = re.search(rf"^## \[{re.escape(version)}\][^\n]*\n", text, re.MULTILINE)
+    if match is None:
+        sys.exit(f"CHANGELOG.md has no `## [{version}]` section")
+    rest = text[match.end() :]
+    following = re.search(r"^## \[", rest, re.MULTILINE)
+    body = rest[: following.start()] if following else rest
+    if not body.strip():
+        sys.exit(f"the {version} section is empty")
+    path = Path("docs/releases") / f"v{version}.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(body.strip() + "\n", encoding="utf-8")
+    print(f"{path}: the changelog section, for the program release")
+
+
 def set_manifest_version(version: str) -> None:
     path = Path("build.zig.zon")
     text = path.read_text(encoding="utf-8")
@@ -109,6 +128,7 @@ def main() -> int:
     if Path(".git").exists() and run("git", "tag", "-l", f"v{version}").strip():
         sys.exit(f"tag v{version} already exists")
     stamp_changelog(version)
+    write_release_notes(version)
     set_manifest_version(version)
     point_install_at_tag(version)
     print("review the diff, commit it, push, then dispatch release.yml")

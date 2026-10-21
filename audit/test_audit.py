@@ -206,3 +206,26 @@ class DependencyUrlTests(unittest.TestCase):
         )
         self.assertEqual(len(errors), 1)
         self.assertIn("/vX.Y.Z.tar.gz", errors[0])
+
+
+class ReleaseCallerTests(unittest.TestCase):
+    def test_a_source_only_repo_has_no_requirement(self) -> None:
+        self.assertEqual(
+            audit.release_caller_findings(False, "release-library.yml"), []
+        )
+
+    def test_a_program_caller_is_fine(self) -> None:
+        caller = (
+            "uses: baskingspot/gh-actions/.github/workflows/release.yml@abc # v1.0.0"
+        )
+        self.assertEqual(audit.release_caller_findings(True, caller), [])
+
+    def test_the_library_caller_is_an_error_for_a_program(self) -> None:
+        errors = audit.release_caller_findings(True, "release-library.yml")
+        self.assertEqual(len(errors), 2)
+        self.assertIn("uses the program workflow", errors[0])
+
+    def test_a_missing_caller_is_an_error_for_a_program(self) -> None:
+        errors = audit.release_caller_findings(True, "")
+        self.assertEqual(len(errors), 1)
+        self.assertIn("does not call the program workflow", errors[0])
