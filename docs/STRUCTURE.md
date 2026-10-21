@@ -86,6 +86,16 @@ A guide that has performance claims has a `# Performance` chapter, placed before
 - A heading's slug is its anchor. Renaming a heading breaks every link to it, including the README bullets, the integration READMEs, and the API docs. Search the repo for the old slug before you rename.
 - A chapter holds at least two sections or a body of its own. A heading over one sentence does not earn its place.
 
+## Doc comments
+
+`//!` and `///` comments in `src/` state the contract. The guide says which piece to pick, and the comments say what a symbol does.
+
+- A module opens with a `//!` brief: what it is and what it promises, in one or two sentences. The root module's first lines are the tagline.
+- A public declaration gets a `///` comment when its name and type do not carry the contract. State invariants, failure modes, and who owns the memory.
+- A comment explains why, not what. No walkthroughs, no review or PR references, no status words.
+- Doc comments keep the repo voice and are exempt from the guide's STE rules. A precise long sentence beats a vague short one.
+- A claim about another symbol needs its own check. A comment written for one type and pasted onto its neighbor is the commonest wrong doc.
+
 ## Other documents
 
 Anything the guide does not hold lives beside it, linked from `## Documentation`:
