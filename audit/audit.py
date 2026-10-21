@@ -635,6 +635,15 @@ def chapter_list_findings(name: str, readme: str, guide: str) -> list[str]:
     return findings
 
 
+def slop_link_findings(name: str, text: str) -> list[str]:
+    """Human-facing docs must not link agent notes under docs/slop/."""
+    return [
+        f"{name} line {number} links docs/slop; human docs do not link agent notes"
+        for number, line in enumerate(text.splitlines(), 1)
+        if "docs/slop" in line
+    ]
+
+
 def check_readme(repo: Repo) -> None:
     readme = repo.read("README.md")
     if readme is None:
@@ -648,12 +657,16 @@ def check_readme(repo: Repo) -> None:
             repo.add("error", "readme", "no baskingspot badge")
     if "TODO" in readme:
         repo.add("error", "readme", "the README has a TODO left in it")
+    for finding in slop_link_findings("README.md", readme):
+        repo.add("error", "docs", finding)
     if repo.name != META_REPO and repo.read("docs/content/_index.md") is not None:
         for finding in readme_heading_findings(readme):
             repo.add("error", "readme", finding)
         guide = repo.read("docs/content/_index.md") or ""
         for finding in chapter_list_findings(repo.name, readme, guide):
             repo.add("error", "readme", finding)
+        for finding in slop_link_findings("docs/content/_index.md", guide):
+            repo.add("error", "docs", finding)
     dashes = readme.count("\u2014")
     if dashes:
         repo.add(

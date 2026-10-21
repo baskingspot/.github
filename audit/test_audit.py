@@ -294,3 +294,13 @@ class ReleaseCallerTests(unittest.TestCase):
         errors = audit.release_caller_findings(True, "")
         self.assertEqual(len(errors), 1)
         self.assertIn("does not call the program workflow", errors[0])
+
+
+class SlopLinkTests(unittest.TestCase):
+    def test_a_human_doc_cannot_link_slop(self) -> None:
+        findings = audit.slop_link_findings("README.md", "See docs/slop/notes.md.")
+        self.assertEqual(len(findings), 1)
+        self.assertIn("README.md line 1", findings[0])
+
+    def test_plain_text_passes(self) -> None:
+        self.assertEqual(audit.slop_link_findings("README.md", "See the guide."), [])
