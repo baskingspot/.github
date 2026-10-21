@@ -11,7 +11,7 @@ TODO: one paragraph. Say why this exists, what it is, and the one fact that sets
 
 ## What is in it
 
-TODO: one bullet per chapter of the guide, in that chapter's own words. Each bullet carries a symbol and a fact. Delete this line.
+TODO: one bullet per chapter of the guide except Getting started, in the guide's order and that chapter's own words. Each bullet carries a symbol and a fact. Delete this line.
 
 - [Chapter title](https://baskingspot.dev/{{name}}/#chapter-title): what it does in one sentence, with the symbol that matters.
 
@@ -46,6 +46,8 @@ TODO: if the module name collides with a std namespace in typical adopter code (
 
 - The [guide](https://baskingspot.dev/{{name}}/) says which piece to use for a task, with examples that compile.
 - The [API reference](https://baskingspot.dev/{{name}}/api/) documents every symbol.
+
+TODO: add `examples/` as the third bullet if the repo has one, then any repo-specific document (a security policy, a readiness file). Delete this line.
 
 ## Work on it
 

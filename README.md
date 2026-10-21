@@ -10,6 +10,7 @@ The org-level repo for [baskingspot](https://github.com/baskingspot). GitHub rea
 The rest is where the org keeps what it shares:
 
 - `docs/VOICE.md` is how baskingspot writes. Read it before you write anything public.
+- `docs/STRUCTURE.md` is how a library's README and guide are laid out: the sections, their order, and the heading rules. Read it with the voice guide.
 - `docs/AI.md` says how LLMs are used and how that work is checked.
 - `docs/TOOLING.md` is the rule that every language has a sanctioned formatter and linter, and the table of which ones.
 - `brand/` holds the logo system, the org's brand files, and the generator that makes a new library's logos.

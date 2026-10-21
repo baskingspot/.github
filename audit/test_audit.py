@@ -3,7 +3,7 @@
 import importlib.util
 import sys
 import unittest
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -22,7 +22,7 @@ def _load() -> Any:
 
 audit = _load()
 
-NOW = datetime(2026, 10, 17, tzinfo=timezone.utc)
+NOW = datetime(2026, 10, 17, tzinfo=UTC)
 
 
 def repo(stage: str | None, created: str) -> dict[str, object]:
@@ -159,6 +159,71 @@ class ReleaseTests(unittest.TestCase):
         errors = audit.release_findings("0.2.0", "## [0.2.0]\n", "")
         self.assertEqual(len(errors), 1)
         self.assertIn("no .version field", errors[0])
+
+
+class ReadmeHeadingTests(unittest.TestCase):
+    GOOD = "\n".join(f"## {h}\n" for h in audit.README_SECTIONS)
+
+    def test_the_house_order_is_clean(self) -> None:
+        self.assertEqual(audit.readme_heading_findings(self.GOOD), [])
+
+    def test_an_extra_section_is_an_error(self) -> None:
+        text = self.GOOD.replace("## Install", "## Design\n\n## Install")
+        findings = audit.readme_heading_findings(text)
+        self.assertEqual(len(findings), 1)
+        self.assertIn("## Design", findings[0])
+
+    def test_sections_out_of_order_are_an_error(self) -> None:
+        text = self.GOOD.replace("Install", "TMP").replace("Documentation", "Install")
+        text = text.replace("TMP", "Documentation")
+        self.assertIn("out of order", " ".join(audit.readme_heading_findings(text)))
+
+    def test_a_missing_section_is_an_error(self) -> None:
+        text = self.GOOD.replace("## Work on it\n", "")
+        self.assertEqual(
+            audit.readme_heading_findings(text),
+            ["README has no `## Work on it`"],
+        )
+
+    def test_a_heading_inside_a_code_fence_is_ignored(self) -> None:
+        text = self.GOOD + "\n```sh\n## not a heading\n```\n"
+        self.assertEqual(audit.readme_heading_findings(text), [])
+
+
+class ChapterListTests(unittest.TestCase):
+    GUIDE = (
+        "Tagline.\n\n- [Parsing](#parsing): one.\n- [Limits](#limits): two.\n\n"
+        "# Getting started\n\n## Install\n\n# Parsing\n\n# Limits\n"
+    )
+    README = (
+        "## What is in it\n\n- [Parsing](https://baskingspot.dev/x/#parsing): one.\n\n"
+        "## Install\n"
+    )
+
+    def findings(self, readme: str, guide: str) -> list[str]:
+        return audit.chapter_list_findings("x", readme, guide)
+
+    def test_matching_lists_are_clean(self) -> None:
+        self.assertEqual(self.findings(self.README, self.GUIDE), [])
+
+    def test_a_chapter_missing_from_the_guide_list_is_an_error(self) -> None:
+        guide = self.GUIDE.replace("- [Parsing](#parsing): one.\n", "")
+        self.assertIn("`#parsing`", " ".join(self.findings(self.README, guide)))
+
+    def test_a_readme_link_to_nothing_is_an_error(self) -> None:
+        readme = self.README.replace("#parsing", "#parsin")
+        self.assertIn("`#parsin`", " ".join(self.findings(readme, self.GUIDE)))
+
+    def test_a_readme_without_a_chapter_bullet_is_an_error(self) -> None:
+        guide = self.GUIDE.replace("# Limits\n", "# Parsing again\n\n# Limits\n", 1)
+        guide = guide.replace(
+            "- [Limits](#limits)",
+            "- [Parsing again](#parsing-again): x.\n- [Limits](#limits)",
+        )
+        self.assertIn("`#parsing-again`", " ".join(self.findings(self.README, guide)))
+
+    def test_a_guide_without_getting_started_is_an_error(self) -> None:
+        self.assertEqual(len(self.findings(self.README, "# Parsing\n")), 1)
 
 
 class InstallCommandTests(unittest.TestCase):

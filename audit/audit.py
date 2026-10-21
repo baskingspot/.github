@@ -22,7 +22,7 @@ import sys
 import tempfile
 import urllib.request
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -541,6 +541,100 @@ def check_workflows(repo: Repo, release: tuple[str, str]) -> None:
             )
 
 
+README_SECTIONS = (
+    "What is in it",
+    "Install",
+    "Documentation",
+    "Work on it",
+    "License",
+    "How it's made",
+)
+
+
+def readme_heading_findings(readme: str) -> list[str]:
+    """Findings for a library README whose `##` headings stray from docs/STRUCTURE.md."""
+    found: list[str] = []
+    fenced = False
+    for line in readme.splitlines():
+        if line.startswith("```"):
+            fenced = not fenced
+        elif not fenced and line.startswith("## "):
+            found.append(line[3:].strip())
+    findings = [
+        f"README has `## {h}`, which STRUCTURE.md does not list"
+        for h in found
+        if h not in README_SECTIONS
+    ]
+    known = [h for h in found if h in README_SECTIONS]
+    for h in sorted({h for h in known if known.count(h) > 1}):
+        findings.append(f"README has `## {h}` more than once")
+    expected = [h for h in README_SECTIONS if h in known]
+    if known != expected and len(set(known)) == len(known):
+        findings.append(
+            "README sections are out of order. STRUCTURE.md says: "
+            + ", ".join(README_SECTIONS)
+        )
+    for h in README_SECTIONS:
+        if h not in known:
+            findings.append(f"README has no `## {h}`")
+    return findings
+
+
+def slug(title: str) -> str:
+    """The anchor Zola gives a heading."""
+    text = re.sub(r"[^\w\s-]", "", title.replace("`", "").lower())
+    return re.sub(r"\s+", "-", text.strip())
+
+
+def headings(text: str, level: int) -> list[str]:
+    """Titles of the headings at exactly this level, outside code fences."""
+    found: list[str] = []
+    fenced = False
+    for line in text.splitlines():
+        if line.startswith("```"):
+            fenced = not fenced
+        elif not fenced:
+            match = re.match(r"(#+) (.*)", line)
+            if match and len(match.group(1)) == level:
+                found.append(match.group(2).strip())
+    return found
+
+
+def chapter_list_findings(name: str, readme: str, guide: str) -> list[str]:
+    """Findings where the guide's chapter list, its chapters, and the README disagree."""
+    chapters = [slug(t) for t in headings(guide, 1)]
+    if "getting-started" not in chapters:
+        return ["the guide has no `# Getting started` chapter"]
+    findings: list[str] = []
+    opening = guide.split("\n# Getting started", 1)[0]
+    listed = re.findall(r"^- \[[^\]]+\]\(#([^)]+)\)", opening, re.MULTILINE)
+    expected = [c for c in chapters if c != "getting-started"]
+    for c in expected:
+        if c not in listed:
+            findings.append(f"the guide's opening list has no bullet for `#{c}`")
+    for c in listed:
+        if c not in expected:
+            findings.append(
+                f"the guide's opening list links `#{c}`, which is not a chapter"
+            )
+    if not findings and listed != expected:
+        findings.append("the guide's opening list is not in chapter order")
+    anchors = {slug(t) for level in (1, 2, 3) for t in headings(guide, level)}
+    section = readme.split("## What is in it", 1)[-1].split("\n## ", 1)[0]
+    linked = re.findall(rf"baskingspot\.dev/{re.escape(name)}/#([\w-]+)", section)
+    for c in linked:
+        if c not in anchors:
+            findings.append(f"README links `#{c}`, which is not a heading in the guide")
+    known = [c for c in linked if c in expected]
+    if known != [c for c in expected if c in known]:
+        findings.append("README's list is not in the guide's chapter order")
+    if linked:
+        for c in expected:
+            if c not in linked and c != "limits":
+                findings.append(f"README's list has no bullet for `#{c}`")
+    return findings
+
+
 def check_readme(repo: Repo) -> None:
     readme = repo.read("README.md")
     if readme is None:
@@ -554,6 +648,12 @@ def check_readme(repo: Repo) -> None:
             repo.add("error", "readme", "no baskingspot badge")
     if "TODO" in readme:
         repo.add("error", "readme", "the README has a TODO left in it")
+    if repo.name != META_REPO and repo.read("docs/content/_index.md") is not None:
+        for finding in readme_heading_findings(readme):
+            repo.add("error", "readme", finding)
+        guide = repo.read("docs/content/_index.md") or ""
+        for finding in chapter_list_findings(repo.name, readme, guide):
+            repo.add("error", "readme", finding)
     dashes = readme.count("\u2014")
     if dashes:
         repo.add(
@@ -871,7 +971,7 @@ def main() -> int:
         }
         repos: dict[str, Repo] = {}
         staged: list[Finding] = []
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         for name in sorted(metas):
             if args.repo and name != args.repo:
                 continue
