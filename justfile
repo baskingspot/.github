@@ -78,6 +78,12 @@ audit REPO="":
 ci-report REPO="":
     {{ brand }} python3 {{ justfile_directory() }}/audit/ci_report.py {{ REPO }}
 
+[doc("Report each released repo's commits since its last tag and what waits in the changelog, with a suggested next version")]
+[group("audit")]
+[no-cd]
+release-status:
+    {{ brand }} python3 {{ justfile_directory() }}/audit/release_status.py
+
 [doc("Render each SVG under DIR to a PNG next to it, with the pinned fonts")]
 [group("brand")]
 brand-render DIR="brand":
