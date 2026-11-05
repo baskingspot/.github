@@ -84,6 +84,7 @@ class UnchangedTest(unittest.TestCase):
             "b724a1dfb92744b8938600787f8464a64f4e2f7a9cb2c347633efcf973a25a84",
         )
         self.assertNotIn("check: test", text)
+        self.assertIn("\n    ziglint\n", text)
 
     def test_the_single_version_agents_md_is_byte_identical(self) -> None:
         text = inc.render_agents("mylib", "Does a thing.")
@@ -101,6 +102,8 @@ class DualTest(unittest.TestCase):
         self.assertIn("check: test", text)
         self.assertIn("ci: check lint", text)
         self.assertNotIn("ci: test lint", text)
+        self.assertIn("\n    ziglint-0-16\n", text)
+        self.assertNotIn("\n    ziglint\n", text)
         self.assertRegex(
             text,
             r'\[doc\("The per-version gate[^"]*"\)\]\n\[group\("ci"\)\]\ncheck: test',
@@ -117,6 +120,7 @@ class DualTest(unittest.TestCase):
         self.assertIn("Zig 0.16 and 0.17", text)
         self.assertIn("nix develop .#zig-old", text)
         self.assertIn("just check", text)
+        self.assertIn("ziglint-0-16", text)
         self.assertNotIn("follows the dual-version pattern", text)
 
     def test_the_flag_picks_the_dual_template(self) -> None:

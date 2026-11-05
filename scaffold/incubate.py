@@ -157,6 +157,13 @@ MIT. See `LICENSE`.
 
 def render_agents(name: str, description: str, dual: bool = False) -> str:
     environment = ENVIRONMENT_DUAL if dual else ENVIRONMENT
+    lint_rule = (
+        "- Lint with `ziglint-0-16`, not `ziglint`: the wrapper points ziglint at "
+        "the 0.16 standard library, so 0.17-only deprecations do not fire while "
+        "0.16 is supported.\n"
+        if dual
+        else ""
+    )
     return f"""# AGENTS.md
 
 Working notes for AI coding agents in baskingspot/{name}.
@@ -171,7 +178,7 @@ Working notes for AI coding agents in baskingspot/{name}.
 
 ## Rules
 
-- Commit messages are one line, `area: summary`, and every commit is signed. Do not rewrite pushed history.
+{lint_rule}- Commit messages are one line, `area: summary`, and every commit is signed. Do not rewrite pushed history.
 - Gate commands on their exit codes, and claim only what you ran.
 - Format with `zig fmt` and lint with `ziglint`. `just fmt` and `just lint` run both.
 - This repo's GitHub settings come from `baskingspot/.github`, with `just settings`. Do not change them by hand.
@@ -200,6 +207,9 @@ and it refuses a version the changelog does not carry. Do not tag by hand.
 def render_justfile(name: str, description: str, dual: bool = False) -> str:
     check = CHECK_RECIPE if dual else ""
     gate_on = "check" if dual else "test"
+    # A dual repo lints against the older standard library, so an API the
+    # newer Zig deprecated still passes.
+    zlint = "ziglint-0-16" if dual else "ziglint"
     return f"""# {name}: {description.rstrip(".")}. `just --list` shows the recipes.
 # AGENTS.md holds the working conventions.
 
@@ -215,7 +225,7 @@ test:
 [doc("Lint Zig, Nix, Markdown, the workflows, and this justfile: ziglint, zig fmt, nix fmt, oxfmt, actionlint, zizmor, and just --fmt")]
 [group("lint")]
 lint:
-    ziglint
+    {zlint}
     zig fmt --check src build.zig
     nix fmt -- --ci
     oxfmt --check README.md AGENTS.md .github
@@ -418,6 +428,11 @@ def scaffold(
     step("just fmt, then just ci")
     run("nix", "develop", "--command", "just", "fmt", cwd=directory)
     run("nix", "develop", "--command", "just", "ci", cwd=directory)
+    if dual:
+        # The same gate on the older compiler, so the first commit is proven
+        # on both versions and not just on the default one.
+        step("just check on the older Zig")
+        run("nix", "develop", ".#zig-old", "--command", "just", "check", cwd=directory)
 
 
 def publish(name: str, directory: Path, description: str, private: bool) -> None:
