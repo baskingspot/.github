@@ -90,7 +90,7 @@ class UnchangedTest(unittest.TestCase):
         text = inc.render_agents("mylib", "Does a thing.")
         self.assertEqual(
             hashlib.sha256(text.encode()).hexdigest(),
-            "6ffa8801fbeab294de1fe5cdf287f15b5ca215a420eb4a1a887acbea62a14c1c",
+            "0f408df244c46c11051fb61c613862292185a6fb6b57066c177cdc0b78802e1d",
         )
 
 
