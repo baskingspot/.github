@@ -40,7 +40,7 @@ exe.root_module.addImport("{{name}}", {{ident}}.module("{{name}}"));
 
 TODO: if the module name collides with a std namespace in typical adopter code (`std.compress`, `std.tls`), say so here and name the alias to bind it as (`compressx`). Otherwise delete this line.
 
-{{name}} builds with Zig 0.16 only.
+{{name}} builds with Zig 0.17.
 
 ## Documentation
 

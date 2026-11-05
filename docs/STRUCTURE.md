@@ -37,7 +37,7 @@ Sections appear in this order. Each `##` heading is spelled exactly as shown.
 
 If the guide has a `# Limits` chapter, `## What is in it` ends with a `Not implemented:` list. It has one bullet for each limit that a reader would assume does not exist, each with the symbol or error that says so.
 
-`## Install` has the `zig fetch` line, the `build.zig` snippet, and the import line when it helps. It names the std namespace that the module collides with and the alias to bind. Its last sentence says the library builds with Zig 0.16 only. The fetch line follows the install rule in `AGENTS.md`.
+`## Install` has the `zig fetch` line, the `build.zig` snippet, and the import line when it helps. It names the std namespace that the module collides with and the alias to bind. Its last sentence names the Zig versions the library builds with, and it must agree with `minimum_zig_version` in `build.zig.zon`. The fetch line follows the install rule in `AGENTS.md`.
 
 `## Documentation` is a bullet list in this order:
 
