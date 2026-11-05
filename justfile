@@ -42,7 +42,7 @@ test:
 [group("ci")]
 ci: test lint
 
-[doc("Start a new Zig library: a repo in DIR from the zig-library template with a license, README, AGENTS.md, justfile, and CI, created as baskingspot/NAME, marked incubating, with the org's settings applied. DIR is required and must end in NAME. DESCRIPTION is one sentence ending in a period. Add --private, or --local to stop before GitHub")]
+[doc("Start a new Zig library: a repo in DIR from the zig-library template with a license, README, AGENTS.md, justfile, and CI, created as baskingspot/NAME, marked incubating, with the org's settings applied. DIR is required and must end in NAME. DESCRIPTION is one sentence ending in a period. Add --zig-dual for a library that must build on the current Zig and the previous release, --private, or --local to stop before GitHub")]
 [group("new")]
 [no-cd]
 incubate NAME DIR DESCRIPTION="An incubating Zig library." *FLAGS:
