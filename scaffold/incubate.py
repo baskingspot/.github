@@ -403,7 +403,9 @@ def scaffold(
     step(f"making {directory}")
     directory.mkdir(parents=True, exist_ok=True)
     run("git", "init", "-q", "-b", "main", ".", cwd=directory)
-    run("nix", "flake", "init", "-t", template, cwd=directory)
+    # --refresh so a template merged in the last hour is the one used, not the
+    # tarball Nix still has cached for the branch.
+    run("nix", "flake", "init", "-t", template, "--refresh", cwd=directory)
     write(directory, "LICENSE", render_license(datetime.now(timezone.utc).year))
     write(directory, "README.md", render_readme(name, description))
     write(directory, "AGENTS.md", render_agents(name, description, dual))
