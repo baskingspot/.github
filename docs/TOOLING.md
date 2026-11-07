@@ -14,22 +14,28 @@ The rule exists for robots as much as for people. A formatter ends the argument 
 
 ## Sanctioned tools
 
-| Language                        | Formatter                          | Linter or checker                   | Comes from                                                   |
-| ------------------------------- | ---------------------------------- | ----------------------------------- | ------------------------------------------------------------ |
-| Zig                             | `zig fmt`                          | `ziglint`                           | the flake, `zig` module                                      |
-| Nix                             | `nixfmt`, through `nix fmt`        | `statix`, `deadnix`                 | the flake, `base` module                                     |
-| Python                          | `ruff format`                      | `ruff check`, and `ty` for types    | `uvx` when a `pyproject.toml` exists, else the flake         |
-| Shell                           | `shfmt`                            | `shellcheck`, always                | the flake, `shell` module                                    |
-| OpenTofu, Terraform (HCL)       | `tofu fmt`                         | `tflint`, and `tofu validate`       | the flake, `terraform` module                                |
-| GitHub Actions workflows        | `oxfmt`                            | `actionlint`, `zizmor`              | the flake, `base` module                                     |
-| Markdown, YAML, JSON, TOML, CSS | `oxfmt`                            | none. The voice guide governs prose | the flake                                                    |
-| JavaScript, TypeScript          | `oxfmt`                            | `oxlint`                            | `bunx` or `npx` when a `package.json` exists, else the flake |
-| Go                              | `gofumpt`, through `golangci-lint` | `golangci-lint`                     | `go.mod` tooling, else the flake                             |
-| Rust                            | `rustfmt`                          | `clippy`                            | the repo's toolchain file, else the flake                    |
-| C, C++                          | `clang-format`                     | `clang-tidy`                        | the flake                                                    |
-| Dockerfile                      | none                               | `hadolint`, always                  | the flake, `docker` module                                   |
-| justfile                        | `just --fmt`                       | `just --fmt --check`                | the flake                                                    |
-| SVG                             | `svgo`                             | none                                | the flake                                                    |
+| Language                        | Formatter                          | Linter or checker                    | Comes from                                                   |
+| ------------------------------- | ---------------------------------- | ------------------------------------ | ------------------------------------------------------------ |
+| Zig                             | `zig fmt`                          | `ziglint`                            | the flake, `zig` module                                      |
+| Nix                             | `nixfmt`, through `nix fmt`        | `statix`, `deadnix`                  | the flake, `base` module                                     |
+| Python                          | `ruff format`                      | `ruff check`, and `ty` for types     | `uvx` when a `pyproject.toml` exists, else the flake         |
+| Shell                           | `shfmt`                            | `shellcheck`, always                 | the flake, `shell` module                                    |
+| Nushell                         | `nufmt`                            | none. `nufmt --dry-run` is the check | the flake                                                    |
+| OpenTofu, Terraform (HCL)       | `tofu fmt`                         | `tflint`, and `tofu validate`        | the flake, `terraform` module                                |
+| GitHub Actions workflows        | `oxfmt`                            | `actionlint`, `zizmor`               | the flake, `base` module                                     |
+| Markdown, YAML, JSON, TOML, CSS | `oxfmt`                            | none. The voice guide governs prose  | the flake                                                    |
+| JavaScript, TypeScript          | `oxfmt`                            | `oxlint`                             | `bunx` or `npx` when a `package.json` exists, else the flake |
+| Go                              | `gofumpt`, through `golangci-lint` | `golangci-lint`                      | `go.mod` tooling, else the flake                             |
+| Rust                            | `rustfmt`                          | `clippy`                             | the repo's toolchain file, else the flake                    |
+| C, C++                          | `clang-format`                     | `clang-tidy`                         | the flake                                                    |
+| Dockerfile                      | none                               | `hadolint`, always                   | the flake, `docker` module                                   |
+| justfile                        | `just --fmt`                       | `just --fmt --check`                 | the flake                                                    |
+| SVG                             | `svgo`                             | none                                 | the flake                                                    |
+
+Nushell is the one row with no linter. `nu --ide-check` is an IDE protocol and
+exits 0 on a file that will not parse, so nothing checks a `.nu` file beyond its
+syntax, and `nufmt --dry-run` is what does that. The row exists because a
+formatter that fails on a broken file is worth more than no check at all.
 
 Where a language ecosystem has a manifest, its own toolchain runs the tool and pins the version: `uvx` with a `pyproject.toml`, `bunx` or `npx` with a `package.json`. The flake carries the tool when there is no manifest. `nix fmt` handles Nix files only. Every other language runs from the repo's justfile.
 
