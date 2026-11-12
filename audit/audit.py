@@ -846,6 +846,18 @@ def check_org(site: Repo | None, repos: dict[str, Repo]) -> list[Finding]:
                 f"{drift}. `just settings --apply` fixes it",
             )
         )
+    # A repo that ships a program needs both App grants, or its release fails
+    # after the notes promise an install command.
+    for key, names in repo_settings.missing_grants(repo_settings.GhApi()).items():
+        findings.append(
+            Finding(
+                "error",
+                "(org)",
+                "settings",
+                f"grants.{key} does not reach {', '.join(names)}. "
+                "`just settings --apply` fixes it",
+            )
+        )
     org = json.loads(run("gh", "api", f"orgs/{ORG}"))
     if org.get("description") != BIO:
         findings.append(

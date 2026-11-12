@@ -10,6 +10,10 @@
       "sha_pinning_required": true
     }
   },
+  "grants": {
+    "variable": "APP_CLIENT_ID",
+    "secret": "APP_PRIVATE_KEY"
+  },
   "repo": {
     "fields": {
       "has_issues": true,

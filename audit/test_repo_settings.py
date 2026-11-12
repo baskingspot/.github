@@ -62,6 +62,86 @@ def matching_repo() -> dict[str, Any]:
     }
 
 
+def org_reads(
+    programs: list[str], selected: dict[str, list[str]] | None = None
+) -> dict[str, Any]:
+    """The reads a grants check makes: the repo list and who each grant reaches.
+
+    The repos are `r` plus the programs, so a test reads like the check. `r`
+    ships nothing. `selected` says which repos each `kind.NAME` grant reaches;
+    a key left out reaches nothing.
+    """
+    reads: dict[str, Any] = {
+        "orgs/baskingspot/repos?per_page=100&type=all": [
+            {"name": name, "id": index, "archived": False}
+            for index, name in enumerate(["r", *programs], start=1)
+        ],
+        "repos/baskingspot/r/contents/.github/release.yaml": rs.ApiError("gone", 404),
+    }
+    for name in programs:
+        reads[f"repos/baskingspot/{name}/contents/.github/release.yaml"] = {
+            "name": "release.yaml"
+        }
+    for kind, name in rs.CONFIG["grants"].items():
+        repos = [
+            {"full_name": f"baskingspot/{repo}", "id": index}
+            for index, repo in enumerate(
+                (selected or {}).get(f"{kind}.{name}", []), start=1
+            )
+        ]
+        reads[rs.grant_path(kind, name)] = {
+            "total_count": len(repos),
+            "repositories": repos,
+        }
+    return reads
+
+
+def both_grants(repos: list[str]) -> dict[str, list[str]]:
+    return {f"{kind}.{name}": repos for kind, name in rs.CONFIG["grants"].items()}
+
+
+class GrantsTest(unittest.TestCase):
+    def test_a_program_that_is_on_both_grants_has_no_drift(self) -> None:
+        self.assertEqual(
+            rs.missing_grants(FakeApi(org_reads(["bs"], both_grants(["bs"])))), {}
+        )
+
+    def test_a_program_missing_from_a_grant_is_reported(self) -> None:
+        reads = org_reads(["bs"], {"variable.APP_CLIENT_ID": ["bs"]})
+        self.assertEqual(
+            rs.missing_grants(FakeApi(reads)),
+            {"secret.APP_PRIVATE_KEY": ["bs"]},
+        )
+
+    def test_a_grant_that_reaches_a_repo_with_no_program_is_not_drift(self) -> None:
+        self.assertEqual(
+            rs.missing_grants(FakeApi(org_reads([], both_grants(["gh-actions"])))), {}
+        )
+
+    def test_applying_keeps_the_repos_already_granted(self) -> None:
+        api = FakeApi(org_reads(["bs"], both_grants(["zigdoc-poc"])))
+        rs.apply_grants(api, rs.missing_grants(api))
+        self.assertCountEqual(
+            api.writes,
+            [
+                (
+                    "PUT",
+                    rs.grant_path(kind, name),
+                    {"selected_repository_ids": [1, 2]},
+                )
+                for kind, name in rs.CONFIG["grants"].items()
+            ],
+        )
+
+    def test_a_server_error_while_reading_a_grant_is_not_swallowed(self) -> None:
+        reads = org_reads(["bs"], both_grants(["bs"]))
+        reads[rs.grant_path("secret", rs.CONFIG["grants"]["secret"])] = rs.ApiError(
+            "boom", 500
+        )
+        with self.assertRaises(rs.ApiError):
+            rs.missing_grants(FakeApi(reads))
+
+
 class DiffTest(unittest.TestCase):
     def test_flatten_makes_dotted_keys(self) -> None:
         self.assertEqual(rs.flatten({"a": {"b": 1}, "c": 2}), {"a.b": 1, "c": 2})

@@ -340,9 +340,72 @@ def apply_org(api: Api, drifts: list[Drift]) -> None:
         )
 
 
-def repo_names(api: Api) -> list[str]:
+def org_repos(api: Api) -> dict[str, int]:
+    """The org's unarchived repos, by name, with their ids."""
     repos = api.get(f"orgs/{ORG}/repos?per_page=100&type=all")
-    return sorted(r["name"] for r in repos if not r["archived"])
+    return {r["name"]: r["id"] for r in repos if not r["archived"]}
+
+
+def repo_names(api: Api) -> list[str]:
+    return sorted(org_repos(api))
+
+
+def ships_a_program(api: Api, repo: str) -> bool:
+    """True when the repo has .github/release.yaml, so it publishes binaries."""
+    try:
+        api.get(f"repos/{ORG}/{repo}/contents/.github/release.yaml")
+    except ApiError as error:
+        if error.status == 404:
+            return False
+        raise
+    return True
+
+
+def grant_path(kind: str, name: str) -> str:
+    return f"orgs/{ORG}/actions/{kind}s/{name}/repositories"
+
+
+def grant_repositories(api: Api, kind: str, name: str) -> dict[str, int]:
+    """The repos an org variable or secret is scoped to, by name."""
+    body = api.get(grant_path(kind, name))
+    return {r["full_name"].split("/", 1)[1]: r["id"] for r in body["repositories"]}
+
+
+def missing_grants(api: Api) -> dict[str, list[str]]:
+    """The program repos each grant does not reach, keyed `kind.NAME`.
+
+    A repo that ships a program needs both grants, because its release mints
+    the tap token. Nothing checked that, so bs v0.1.0 published a release
+    whose notes promised a cask its tap job could not write. A grant that
+    reaches a repo without a release.yaml is not drift.
+    """
+    programs = [name for name in org_repos(api) if ships_a_program(api, name)]
+    missing: dict[str, list[str]] = {}
+    for kind, name in CONFIG["grants"].items():
+        granted = grant_repositories(api, kind, name)
+        gone = sorted(repo for repo in programs if repo not in granted)
+        if gone:
+            missing[f"{kind}.{name}"] = gone
+    return missing
+
+
+def apply_grants(api: Api, missing: dict[str, list[str]]) -> None:
+    """Add the missing repos to each grant, and keep the ones already there."""
+    ids = org_repos(api)
+    for kind, name in CONFIG["grants"].items():
+        gone = missing.get(f"{kind}.{name}")
+        if not gone:
+            continue
+        granted = grant_repositories(api, kind, name)
+        api.send(
+            "PUT",
+            grant_path(kind, name),
+            {
+                "selected_repository_ids": sorted(
+                    {*granted.values(), *(ids[repo] for repo in gone)}
+                )
+            },
+        )
 
 
 def main() -> int:
@@ -385,6 +448,22 @@ def main() -> int:
             want_org(),
             lambda drifts: apply_org(api, drifts),
         )
+        missing = missing_grants(api)
+        if missing and args.apply:
+            apply_grants(api, missing)
+            for key, repos in missing.items():
+                print(f"org grants: added {', '.join(repos)} to {key}")
+            # A read right after a write can be stale, as above.
+            for _ in range(4):
+                missing = missing_grants(api)
+                if not missing:
+                    break
+                time.sleep(2)
+        for key, repos in missing.items():
+            drift_found = True
+            print(f"org grants: {key} does not reach {', '.join(repos)}")
+        if not missing:
+            print("org grants: matches")
     for name in repo_names(api) if everything else args.repo:
         handle(
             name,
