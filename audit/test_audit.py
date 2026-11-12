@@ -304,3 +304,14 @@ class SlopLinkTests(unittest.TestCase):
 
     def test_plain_text_passes(self) -> None:
         self.assertEqual(audit.slop_link_findings("README.md", "See the guide."), [])
+
+
+class GuideLinkTests(unittest.TestCase):
+    def test_a_relative_link_into_the_repo_is_an_error(self) -> None:
+        findings = audit.guide_link_findings("See [the example](../examples/wire.zig).")
+        self.assertEqual(len(findings), 1)
+        self.assertIn("line 1 links ../examples/wire.zig", findings[0])
+
+    def test_github_and_anchor_links_pass(self) -> None:
+        text = "See [wire](https://github.com/baskingspot/x/blob/main/e.zig) and [wire](#wire)."
+        self.assertEqual(audit.guide_link_findings(text), [])

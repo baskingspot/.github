@@ -162,7 +162,10 @@ def check_metadata(repo: Repo, roster: dict[str, dict[str, str]]) -> None:
     if not description:
         repo.add("error", "about", "no description")
     else:
-        if not description[0].isupper():
+        # A description may begin with the repository's own name, in its brand
+        # casing: "gRPC in Zig..." for the grpc repo. The name is the brand.
+        starts_with_name = description[: len(repo.name)].lower() == repo.name.lower()
+        if not description[0].isupper() and not starts_with_name:
             repo.add("warn", "about", "the description does not start with a capital")
         if not description.endswith("."):
             repo.add(
@@ -644,6 +647,19 @@ def slop_link_findings(name: str, text: str) -> list[str]:
     ]
 
 
+GUIDE_LINK = re.compile(r"\[[^\]]*\]\((\.\./[^)\s]*)\)")
+
+
+def guide_link_findings(text: str) -> list[str]:
+    """A guide link into `../` resolves against the site route, not the repo."""
+    return [
+        f"docs/content/_index.md line {number} links {target}, which resolves "
+        "against the site route; link the file on GitHub by URL"
+        for number, line in enumerate(text.splitlines(), 1)
+        for target in GUIDE_LINK.findall(line)
+    ]
+
+
 def check_readme(repo: Repo) -> None:
     readme = repo.read("README.md")
     if readme is None:
@@ -666,6 +682,8 @@ def check_readme(repo: Repo) -> None:
         for finding in chapter_list_findings(repo.name, readme, guide):
             repo.add("error", "readme", finding)
         for finding in slop_link_findings("docs/content/_index.md", guide):
+            repo.add("error", "docs", finding)
+        for finding in guide_link_findings(guide):
             repo.add("error", "docs", finding)
     dashes = readme.count("\u2014")
     if dashes:
