@@ -13,4 +13,4 @@ There are [agent skills](https://github.com/baskingspot/skills) too, for the sam
 
 Guides, API references, and install lines are at [baskingspot.dev](https://baskingspot.dev). A library that has tagged a release installs from the tag; the others install from `main` until they have one.
 
-I build these with LLM assistance and review nearly all of it myself. [How, in detail](https://github.com/baskingspot/.github/blob/main/docs/AI.md).
+I build my libraries here with LLM assistance. [How I use LLMs](https://github.com/baskingspot/.github/blob/main/docs/AI.md).
