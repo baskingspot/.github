@@ -54,6 +54,12 @@ incubate NAME DIR DESCRIPTION="An incubating Zig library." *FLAGS:
 settings *ARGS:
     {{ brand }} python3 {{ justfile_directory() }}/audit/repo_settings.py {{ ARGS }}
 
+[doc("Check every repo's labels against audit/labels.json, the one list of them. Add --apply to change what differs, --repo NAME for one repo, or --leftovers to list the repo labels the tool leaves alone. Needs gh. Exit 1 on drift")]
+[group("audit")]
+[no-cd]
+labels *ARGS:
+    {{ brand }} python3 {{ justfile_directory() }}/audit/repo_labels.py {{ ARGS }}
+
 [doc("Prepare a release in the current repo: stamp the changelog, set the version, point the install line at the tag. Review, commit, push, then dispatch the repo's release.yml")]
 [group("audit")]
 [no-cd]

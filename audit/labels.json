@@ -1,0 +1,55 @@
+{
+  "note": "The labels every repo carries. Kind lives in the issue type (Bug, Feature, Task), which is set by the org issue forms in .github/ISSUE_TEMPLATE. Priority is a label because issue fields cannot be filtered by the search API that gh-dash uses.",
+  "canonical": [
+    {
+      "name": "priority:00-close-now",
+      "color": "6e7781",
+      "description": "Nobody should work on this. Close it, or mark it not planned."
+    },
+    {
+      "name": "priority:10-now",
+      "color": "d93f0b",
+      "description": "Do this before anything else in the org."
+    },
+    {
+      "name": "priority:20-next",
+      "color": "fbca04",
+      "description": "After the current work lands."
+    },
+    {
+      "name": "priority:50-deferred",
+      "color": "c5def5",
+      "description": "Parked on purpose. Revisit only if something changes."
+    },
+    {
+      "name": "security",
+      "color": "b60205",
+      "description": "Touches memory safety, key material, or a protocol invariant."
+    },
+    {
+      "name": "blocked",
+      "color": "b4a7d6",
+      "description": "Waiting on something outside this issue. Say what in a comment."
+    },
+    {
+      "name": "good first issue",
+      "color": "7057ff",
+      "description": "Small, self-contained, and written up well enough for a first pull request."
+    },
+    {
+      "name": "help wanted",
+      "color": "008672",
+      "description": "Nobody here is on it. A pull request is welcome."
+    }
+  ],
+  "superseded": [
+    "bug",
+    "enhancement",
+    "documentation",
+    "accessibility",
+    "duplicate",
+    "invalid",
+    "question",
+    "wontfix"
+  ]
+}

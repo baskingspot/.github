@@ -1,0 +1,20 @@
+name: Task
+description: Work the library needs that is not a defect and not a new feature.
+title: ""
+type: Task
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What needs doing
+      description: The file, the workflow, the dependency. Name it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: The command that passes, or the file that exists. If you cannot name it, this is a note rather than a task.
+    validations:
+      required: true

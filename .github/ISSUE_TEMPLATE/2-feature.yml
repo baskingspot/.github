@@ -1,0 +1,29 @@
+name: Feature
+description: Something the library cannot do yet, and how you hit the edge.
+title: "feature: "
+type: Feature
+body:
+  - type: textarea
+    id: missing
+    attributes:
+      label: What is missing
+      description: The call, the type, or the behavior that does not exist.
+    validations:
+      required: true
+
+  - type: textarea
+    id: blocked
+    attributes:
+      label: What you are doing instead
+      description: The workaround, or the code you had to write by hand. This is the argument for the feature, so be specific.
+      render: zig
+    validations:
+      required: true
+
+  - type: textarea
+    id: shape
+    attributes:
+      label: What the API could look like
+      description: Optional. A signature, a name, a paragraph. The lowest primitive that solves it is the one that will most likely land.
+    validations:
+      required: false

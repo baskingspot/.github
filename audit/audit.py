@@ -26,6 +26,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import repo_labels
 import repo_settings
 
 ORG = "baskingspot"
@@ -195,6 +196,7 @@ def check_metadata(repo: Repo, roster: dict[str, dict[str, str]]) -> None:
             f"GitHub does not detect a license the org uses: {', '.join(LICENSES)}",
         )
     check_settings(repo)
+    check_labels(repo)
     check_social(repo)
 
 
@@ -351,6 +353,19 @@ def check_settings(repo: Repo) -> None:
     have = repo_settings.read_repo(repo_settings.GhApi(), repo.name)
     for drift in repo_settings.diff(repo_settings.want_repo(), have):
         repo.add("error", "settings", f"{drift}. `just settings --apply` fixes it")
+
+
+def check_labels(repo: Repo) -> None:
+    """The repo's labels against audit/labels.json, the one list of them.
+
+    Kind is the issue type, which GitHub has no setting to require. A run of
+    `just labels --apply` cannot fix a missing type, so that one is reported
+    where the priorities are not.
+    """
+    have = repo_labels.read_labels(repo_settings.GhApi(), repo.name)
+    changes, _ = repo_labels.plan(have)
+    for change in changes:
+        repo.add("error", "labels", f"{change}. `just labels --apply` fixes it")
 
 
 def check_social(repo: Repo) -> None:

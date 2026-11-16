@@ -463,6 +463,10 @@ def publish(name: str, directory: Path, description: str, private: bool) -> None
     )  # fmt: skip
     step("applying the org's settings")
     run(sys.executable, str(AUDIT_DIR / "repo_settings.py"), "--repo", name, "--apply")
+    # A new repo is born with GitHub's ten default labels. Replace them with
+    # the org's set, so no repo starts as drift.
+    step("applying the org's labels")
+    run(sys.executable, str(AUDIT_DIR / "repo_labels.py"), "--repo", name, "--apply")
     step("pushing")
     run("git", "push", "-u", "origin", "main", cwd=directory)
 

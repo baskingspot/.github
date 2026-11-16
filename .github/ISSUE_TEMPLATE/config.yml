@@ -1,0 +1,2 @@
+# Defaults for every baskingspot repo that has no ISSUE_TEMPLATE of its own.
+blank_issues_enabled: true

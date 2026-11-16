@@ -1,0 +1,39 @@
+name: Bug
+description: Something the library does wrong. Wrong bytes, wrong result, a crash.
+title: "bug: "
+type: Bug
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happens
+      description: The error, the output, or the crash. Paste it as it printed.
+      placeholder: |
+        error: comptime dereference requires '@Vector(16, u8)' to have a well-defined layout
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      description: The bytes, value, or behavior the documentation promises.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce it
+      description: A test that fails, the smallest one you can write. Name the Zig version and the target.
+      render: zig
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The tag you depend on, or the commit if you are on a branch.
+    validations:
+      required: false

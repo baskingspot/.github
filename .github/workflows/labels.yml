@@ -1,0 +1,32 @@
+name: labels
+
+# Labels are not files, so the maintenance job in gh-actions cannot carry
+# them: that job updates a repo's files, runs `just ci`, and pushes one
+# signed commit. A label is an API call, and it never needs a commit.
+#
+# This is the drift nag instead. Weekly and read-only: it runs the same check
+# as `just labels` and fails the run when a repo differs from
+# audit/labels.json. The fix is one command, `just labels --apply`.
+on:
+  workflow_dispatch:
+  schedule:
+    # Monday 05:53 UTC, half an hour after the maintenance run starts.
+    - cron: "53 5 * * 1"
+
+permissions: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the one list
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compare every repo's labels against audit/labels.json
+        run: python3 audit/repo_labels.py
+        env:
+          GH_TOKEN: ${{ github.token }}
