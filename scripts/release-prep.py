@@ -50,7 +50,7 @@ def stamp_changelog(version: str) -> None:
     tail = rest[following.start() :] if following else ""
     if not body.strip():
         sys.exit("the Unreleased section is empty; write the notes first")
-    date = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
+    date = datetime.datetime.now(datetime.UTC).date().isoformat()
     stamped = f"{before}## [Unreleased]\n\n## [{version}] - {date}\n\n{body.strip()}\n"
     if tail:
         stamped += "\n" + tail

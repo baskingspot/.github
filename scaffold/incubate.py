@@ -27,7 +27,7 @@ import json
 import re
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ORG = "baskingspot"
@@ -406,7 +406,7 @@ def scaffold(
     # --refresh so a template merged in the last hour is the one used, not the
     # tarball Nix still has cached for the branch.
     run("nix", "flake", "init", "-t", template, "--refresh", cwd=directory)
-    write(directory, "LICENSE", render_license(datetime.now(timezone.utc).year))
+    write(directory, "LICENSE", render_license(datetime.now(UTC).year))
     write(directory, "README.md", render_readme(name, description))
     write(directory, "AGENTS.md", render_agents(name, description, dual))
     write(directory, "CHANGELOG.md", render_changelog(name))
