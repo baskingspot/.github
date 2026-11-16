@@ -99,6 +99,10 @@ class ApplyTest(unittest.TestCase):
             ],
             [(method, path) for method, path, _ in sent],
         )
+        # GitHub refuses a create with no name, which is how this shipped broken once.
+        self.assertEqual("blocked", (sent[0][2] or {})["name"])
+        self.assertEqual("b4a7d6", (sent[0][2] or {})["color"])
+        self.assertNotIn("name", sent[1][2] or {})
 
     def test_a_refusal_does_not_stop_the_rest(self) -> None:
         from repo_settings import ApiError

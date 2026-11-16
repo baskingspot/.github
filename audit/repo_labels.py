@@ -93,7 +93,8 @@ def apply_changes(api: Api, repo: str, changes: list[Change]) -> list[str]:
         path = f"repos/{ORG}/{repo}/labels/{change.name}"
         try:
             if change.action == "create":
-                api.send("POST", f"repos/{ORG}/{repo}/labels", change.body)
+                body = {"name": change.name, **(change.body or {})}
+                api.send("POST", f"repos/{ORG}/{repo}/labels", body)
             elif change.action == "update":
                 api.send("PATCH", path, change.body)
             else:
@@ -122,8 +123,6 @@ def main() -> int:
             for refusal in apply_changes(api, repo, changes):
                 drift_found = True
                 print(f"{repo}: {refusal}")
-            for change in changes:
-                print(f"{repo}: {change}")
             # A read right after a write can be stale, so look again before
             # calling a label drift.
             for _ in range(4):
