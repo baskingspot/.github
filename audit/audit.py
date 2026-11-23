@@ -180,7 +180,9 @@ def check_metadata(repo: Repo, roster: dict[str, dict[str, str]]) -> None:
     want = f"https://baskingspot.dev/{repo.name}/" if repo.name in roster else ""
     if want and homepage != want:
         repo.add("error", "homepage", f"want {want}, have {homepage or 'none'}")
-    if not want and homepage:
+    if not want and homepage and repo.name != "site":
+        # The router's own homepage is baskingspot.dev, which is not a
+        # library site and has no roster entry.
         repo.add(
             "info",
             "homepage",
