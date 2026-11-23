@@ -435,7 +435,12 @@ def check_files(repo: Repo) -> None:
     spdx = str((repo.meta.get("license") or {}).get("spdx_id") or "")
     if license_text and not license_text_matches(spdx, license_text):
         repo.add("error", "license", f"LICENSE text is not {spdx or 'a known license'}")
-    elif license_text and spdx == "MIT" and "and contributors" not in license_text:
+    elif (
+        license_text
+        and spdx == "MIT"
+        and "and contributors" not in license_text
+        and "baskingspot contributors" not in license_text
+    ):
         people = gh_json(f"repos/{ORG}/{repo.name}/contributors?per_page=100")
         humans = [p["login"] for p in people if p.get("type") == "User"]
         if len(humans) > 1:
