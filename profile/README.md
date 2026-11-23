@@ -7,7 +7,7 @@
 
 Zig is cold-blooded. Come bask.
 
-The libraries between `std` and your application: the parts that std stops short of and every project ends up rewriting. Each one is a Zig 0.16 package that does one job and documents it.
+The libraries between `std` and your application: the parts that std stops short of and every project ends up rewriting. Each one is a Zig 0.17 package that does one job and documents it.
 
 There are [agent skills](https://github.com/baskingspot/skills) too, for the same reason. A guide says what exists; a skill says how we write. Written cold, Zig drifts toward C, tests go through the built-in runner, and nothing reaches for a primitive that already exists. Install them with `npx skills add baskingspot/skills`, or in pi with `pi install git:github.com/baskingspot/skills`.
 
