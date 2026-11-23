@@ -129,7 +129,8 @@ def gh_json(path: str) -> Any:
 
 
 def normal(text: str) -> str:
-    return re.sub(r"\s+", " ", text).strip().rstrip(".").strip()
+    """Compare prose, not Markdown: the About text cannot carry code font."""
+    return re.sub(r"\s+", " ", text.replace("`", "")).strip().rstrip(".").strip()
 
 
 def phrase_hits(text: str) -> list[str]:
@@ -242,20 +243,28 @@ def check_topics(repo: Repo, topics: list[str]) -> None:
         repo.add("error", "topics", f"missing the topic {named}")
 
 
-def release_findings(version: str, changelog: str, manifest: str) -> list[str]:
-    """What disagrees with the latest release, given the files at HEAD."""
+def release_findings(
+    version: str, changelog: str | None, manifest: str | None
+) -> list[str]:
+    """What disagrees with the latest release, given the files at HEAD.
+
+    A file that does not exist is not a finding. gh-actions tags releases and
+    has neither a changelog nor a Zig manifest, so the absence is the repo's
+    shape, not a missing file.
+    """
     errors = []
-    if f"## [{version}]" not in changelog:
+    if changelog is not None and f"## [{version}]" not in changelog:
         errors.append(
             f"the latest tag v{version} has no `## [{version}]` section in CHANGELOG.md"
         )
-    match = re.search(r'^\s*\.version = "([^"]*)"', manifest, re.MULTILINE)
-    if match is None:
-        errors.append("build.zig.zon has no .version field")
-    elif match.group(1) != version:
-        errors.append(
-            f"build.zig.zon says {match.group(1)}, the latest tag is v{version}"
-        )
+    if manifest is not None:
+        match = re.search(r'^\s*\.version = "([^"]*)"', manifest, re.MULTILINE)
+        if match is None:
+            errors.append("build.zig.zon has no .version field")
+        elif match.group(1) != version:
+            errors.append(
+                f"build.zig.zon says {match.group(1)}, the latest tag is v{version}"
+            )
     return errors
 
 
@@ -336,8 +345,10 @@ def check_release(repo: Repo) -> None:
     tag = str(releases[0].get("tag_name") or "")
     version = tag.removeprefix("v")
     errors = release_findings(
-        version, repo.read("CHANGELOG.md") or "", repo.read("build.zig.zon") or ""
+        version, repo.read("CHANGELOG.md"), repo.read("build.zig.zon")
     )
+    if repo.read("build.zig") is not None and repo.read("build.zig.zon") is None:
+        errors.append("build.zig exists but build.zig.zon is missing")
     errors += install_findings(
         repo.name,
         version,

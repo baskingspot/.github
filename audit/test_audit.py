@@ -160,6 +160,17 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(len(errors), 1)
         self.assertIn("no .version field", errors[0])
 
+    def test_a_repo_without_a_changelog_or_a_manifest_is_clean(self) -> None:
+        self.assertEqual(audit.release_findings("0.13.3", None, None), [])
+
+
+class AboutTextTests(unittest.TestCase):
+    def test_inline_code_does_not_separate_the_about_from_the_readme(self) -> None:
+        self.assertEqual(
+            audit.normal("Flags: `-xvf`, and a `while` loop."),
+            audit.normal("Flags: -xvf, and a while loop."),
+        )
+
 
 class ReadmeHeadingTests(unittest.TestCase):
     GOOD = "\n".join(f"## {h}\n" for h in audit.README_SECTIONS)
