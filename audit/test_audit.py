@@ -326,3 +326,26 @@ class GuideLinkTests(unittest.TestCase):
     def test_github_and_anchor_links_pass(self) -> None:
         text = "See [wire](https://github.com/baskingspot/x/blob/main/e.zig) and [wire](#wire)."
         self.assertEqual(audit.guide_link_findings(text), [])
+
+
+class DisclosureTests(unittest.TestCase):
+    def test_another_authors_byline_is_recognised(self) -> None:
+        text = "MIT License\n\nCopyright (c) 2025 Tim Culverhouse\n"
+        self.assertTrue(audit.other_authors_hold_the_copyright(text))
+
+    def test_the_adopters_byline_is_not(self) -> None:
+        self.assertFalse(
+            audit.other_authors_hold_the_copyright(
+                "Copyright (c) 2026 Matt Robenolt and contributors"
+            )
+        )
+
+    def test_the_org_byline_is_not(self) -> None:
+        self.assertFalse(
+            audit.other_authors_hold_the_copyright(
+                "Copyright (c) 2026 baskingspot contributors"
+            )
+        )
+
+    def test_a_license_with_no_holder_is_not(self) -> None:
+        self.assertFalse(audit.other_authors_hold_the_copyright("Apache License"))

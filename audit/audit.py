@@ -671,6 +671,24 @@ def chapter_list_findings(name: str, readme: str, guide: str) -> list[str]:
     return findings
 
 
+COPYRIGHT_HOLDER = re.compile(r"Copyright \(c\) \d{4} (.+)", re.IGNORECASE)
+
+
+def other_authors_hold_the_copyright(license_text: str) -> bool:
+    """True when the LICENSE names only someone other than Matt or the org.
+
+    The README's AI.md link is Matt's first-person statement about his own
+    work, so it does not go on a project whose byline is someone else's. Such
+    a repo still says how the work is made, without the link.
+    """
+    holders = COPYRIGHT_HOLDER.findall(license_text)
+    if not holders:
+        return False
+    return not any(
+        re.search(r"Matt Robenolt|baskingspot", holder) for holder in holders
+    )
+
+
 def slop_link_findings(name: str, text: str) -> list[str]:
     """Human-facing docs must not link agent notes under docs/slop/."""
     return [
@@ -701,7 +719,11 @@ def check_readme(repo: Repo) -> None:
         if not readme.lstrip().startswith("<h1>"):
             repo.add("error", "readme", "the README does not open with the logo header")
         if "docs/AI.md" not in readme:
-            repo.add("error", "readme", "no link to AI.md")
+            if other_authors_hold_the_copyright(repo.read("LICENSE") or ""):
+                if "LLM" not in readme:
+                    repo.add("error", "readme", "no LLM disclosure")
+            else:
+                repo.add("error", "readme", "no link to AI.md")
         if "badge.svg" not in readme:
             repo.add("error", "readme", "no baskingspot badge")
     if "TODO" in readme:
