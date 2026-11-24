@@ -341,7 +341,13 @@ def check_release_caller(repo: Repo) -> None:
 
 def check_release(repo: Repo) -> None:
     """A release is a tag with a changelog section; the manifest agrees."""
-    releases = gh_json(f"repos/{ORG}/{repo.name}/releases?per_page=1")
+    # A draft is not a release, and GitHub lists drafts first, so a repo that
+    # never deleted one hides its newest release from the check.
+    releases = [
+        release
+        for release in gh_json(f"repos/{ORG}/{repo.name}/releases?per_page=10")
+        if not release.get("draft")
+    ]
     if not releases:
         return
     tag = str(releases[0].get("tag_name") or "")
